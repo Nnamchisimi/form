@@ -396,6 +396,16 @@ button {
   border-color: #9ca3af;
 }
 
+.btn-ghost {
+  background: transparent;
+  color: #374151;
+  border: none;
+}
+
+.btn-ghost:hover {
+  background: #f3f4f6;
+}
+
 .btn-primary {
   background: #000000;
   color: #ffffff;
@@ -406,6 +416,15 @@ button {
   transform: translateY(-1px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
+
+.btn-primary:disabled,
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 
 .error-message {
   color: #000000;
@@ -444,7 +463,10 @@ button {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  align-items: center;
 }
+
+
 
 .stats-card {
   display: inline-flex;
@@ -481,6 +503,25 @@ button {
   text-align: center;
   padding: 40px;
   color: #6b7280;
+}
+
+.pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.pagination-info {
+  font-weight: 600;
+  color: #374151;
+  min-width: 80px;
+  text-align: center;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .about-card {
@@ -809,8 +850,17 @@ button {
 
 .action-buttons-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 10px;
+}
+
+.action-buttons-row .btn-approve,
+.action-buttons-row .btn-reject,
+.action-buttons-row .btn-send,
+.action-buttons-row .btn-delete {
+  flex: 0 1 auto;
+  white-space: nowrap;
 }
 
 .textarea-with-action {
@@ -865,11 +915,18 @@ button {
   cursor: pointer;
   font-size: 0.85em;
   font-weight: 500;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.btn-approve:hover {
+.btn-approve:hover:not(:disabled) {
   background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.35);
+}
+
+.btn-approve:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 .btn-send {
@@ -881,11 +938,18 @@ button {
   cursor: pointer;
   font-size: 0.85em;
   font-weight: 500;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.btn-send:hover {
+.btn-send:hover:not(:disabled) {
   background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
+}
+
+.btn-send:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 .btn-reject {
@@ -897,17 +961,44 @@ button {
   cursor: pointer;
   font-size: 0.85em;
   font-weight: 500;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .btn-reject:hover:not(:disabled) {
   background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
 }
 
-.btn-reject:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.btn-reject:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
 }
+
+.btn-delete {
+  padding: 6px 10px;
+  border: none;
+  background: #6b7280;
+  color: #ffffff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85em;
+  font-weight: 500;
+  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background: #4b5563;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(107, 114, 128, 0.35);
+}
+
+.btn-delete:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+
 
 .btn-info {
   padding: 6px 10px;
@@ -1535,6 +1626,11 @@ button {
     display: none;
   }
 
+  .pagination {
+    width: 100%;
+    justify-content: center;
+  }
+
   .admin-mobile-cards {
     display: flex;
     flex-direction: column;
@@ -1629,22 +1725,53 @@ button {
     border-radius: 6px;
     cursor: pointer;
     font-weight: 500;
+    transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
   }
 
   .admin-mobile-actions .btn-approve {
     background: #10b981;
   }
 
-  .admin-mobile-actions .btn-approve:hover {
+  .admin-mobile-actions .btn-approve:hover:not(:disabled) {
     background: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.35);
+  }
+
+  .admin-mobile-actions .btn-approve:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
   }
 
   .admin-mobile-actions .btn-send {
     background: #3b82f6;
   }
 
-  .admin-mobile-actions .btn-send:hover {
+  .admin-mobile-actions .btn-send:hover:not(:disabled) {
     background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
+  }
+
+  .admin-mobile-actions .btn-send:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  .admin-mobile-actions .btn-send {
+    flex: 0 1 auto;
+  }
+
+  .admin-mobile-actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .admin-mobile-actions .btn-approve,
+  .admin-mobile-actions .btn-reject,
+  .admin-mobile-actions .btn-delete {
+    flex: 0 1 auto;
   }
 
   .admin-mobile-actions .btn-reject {
@@ -1653,12 +1780,45 @@ button {
 
   .admin-mobile-actions .btn-reject:hover:not(:disabled) {
     background: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
+  }
+
+  .admin-mobile-actions .btn-reject:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
   }
 
   .admin-mobile-actions .btn-reject:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
+
+  .admin-mobile-actions .btn-delete {
+    flex: 1;
+    padding: 10px 14px;
+    font-size: 0.9em;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    background: #6b7280;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .admin-mobile-actions .btn-delete:hover:not(:disabled) {
+    background: #4b5563;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(107, 114, 128, 0.35);
+  }
+
+  .admin-mobile-actions .btn-delete:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+
 
   .admin-mobile-actions .admin-field {
     display: flex;
@@ -1942,4 +2102,58 @@ button {
   font-size: 0.95em;
   color: #6b7280;
   font-weight: 500;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modal h3 {
+  margin: 0 0 16px;
+  font-size: 1.25em;
+  font-weight: 700;
+  color: #000000;
+}
+
+.modal p {
+  margin: 0 0 8px;
+  color: #374151;
+  font-size: 0.95em;
+}
+
+.modal textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.modal .button-group {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 16px;
 }

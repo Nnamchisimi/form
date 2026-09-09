@@ -1,15 +1,19 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Download, Trash, Users, ArrowLeft } from '../icons';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Download, Users, ArrowLeft, Archive, LogOut } from '../icons';
 import storage from '../storage';
 import { supabase } from '../supabaseClient';
 import translations from '../translations';
 import AdminTable from './AdminTable';
 import AdminMobileCards from './AdminMobileCards';
 
-const AdminPage = ({ language, onBack }) => {
+const AdminPage = ({ language, onBack, onToast }) => {
+  const showToast = (message, severity = 'info') => {
+    if (onToast) onToast(message, severity);
+  };
   const [records, setRecords] = useState([]);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const processingRef = useRef(new Set());
   const [receiptUrls, setReceiptUrls] = useState({});
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,7 +21,15 @@ const AdminPage = ({ language, onBack }) => {
   const [archivedRecords, setArchivedRecords] = useState([]);
   const [rejectionReasons, setRejectionReasons] = useState({});
   const [rejectionForms, setRejectionForms] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [reminderModal, setReminderModal] = useState(null);
+  const [reminderMessage, setReminderMessage] = useState('');
+  const itemsPerPage = 10;
   const t = translations[language];
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [showArchive, records.length, archivedRecords.length]);
 
   useEffect(() => {
     if (!session) return;
@@ -53,18 +65,18 @@ const AdminPage = ({ language, onBack }) => {
   ];
 
   const loadReceiptUrls = useCallback(async (records) => {
-    const urls = {};
+    const newUrls = {};
     for (const record of records) {
       if (record.vehicle_stub) {
         try {
           const url = await storage.getReceiptUrl(record.vehicle_stub);
-          urls[record.id] = url;
+          newUrls[record.id] = url;
         } catch (error) {
           console.error('Error loading receipt URL for record', record.id, ':', error);
         }
       }
     }
-    setReceiptUrls(urls);
+    setReceiptUrls(prev => ({ ...prev, ...newUrls }));
   }, []);
 
   const loadRegistrations = useCallback(async () => {
@@ -102,10 +114,75 @@ const AdminPage = ({ language, onBack }) => {
     }
   };
 
+  const isRecordIncomplete = (record) => {
+    if (!record) return false;
+    const missing = [];
+    if (!record.name?.trim()) missing.push('name');
+    if (!record.surname?.trim()) missing.push('surname');
+    if (!record.email?.trim()) missing.push('email');
+    if (!record.phone?.trim()) missing.push('phone');
+    if (!record.dob) missing.push('dob');
+    if (!record.vehicle_brand) missing.push('vehicleBrand');
+    if (!record.vehicle_model?.trim()) missing.push('vehicleModel');
+    if (!record.model_year) missing.push('modelYear');
+    if (!record.license_plate?.trim()) missing.push('licensePlate');
+    if (!record.location) missing.push('location');
+    if (!record.vehicle_stub) missing.push('vehicleStub');
+    return missing.length > 0;
+  };
+
+  const getMissingFields = (record) => {
+    if (!record) return [];
+    const missing = [];
+    if (!record.name?.trim()) missing.push(language === 'tr' ? 'Ad' : 'Name');
+    if (!record.surname?.trim()) missing.push(language === 'tr' ? 'Soyadı' : 'Surname');
+    if (!record.email?.trim()) missing.push(language === 'tr' ? 'E-posta' : 'Email');
+    if (!record.phone?.trim()) missing.push(language === 'tr' ? 'Telefon Numarası' : 'Phone Number');
+    if (!record.dob) missing.push(language === 'tr' ? 'Doğum Tarihi' : 'Date of Birth');
+    if (!record.vehicle_brand) missing.push(language === 'tr' ? 'Araç Markası' : 'Vehicle Brand');
+    if (!record.vehicle_model?.trim()) missing.push(language === 'tr' ? 'Araç Modeli' : 'Vehicle Model');
+    if (!record.model_year) missing.push(language === 'tr' ? 'Model Yılı' : 'Model Year');
+    if (!record.license_plate?.trim()) missing.push(language === 'tr' ? 'Plaka' : 'License Plate');
+    if (!record.location) missing.push(language === 'tr' ? 'Konum' : 'Location');
+    if (!record.vehicle_stub) missing.push(language === 'tr' ? 'Koçan' : 'Car Document');
+    return missing;
+  };
+
+  const handleSendReminder = (record) => {
+    const missing = getMissingFields(record);
+    const missingList = missing.join('\n');
+    const editLink = `${window.location.origin}?ref=${record.reference_number}`;
+    const defaultMessage = language === 'tr'
+      ? `Merhaba ${record.name} ${record.surname},\n\nKaydınızda eksik alanlar var. Lütfen aşağıdaki bilgileri tamamlayın:\n\n${missingList}\n\nKaydınızı düzenlemek için bu bağlantıya tıklayın:\n${editLink}`
+      : `Hello ${record.name} ${record.surname},\n\nYour registration has missing fields. Please complete the following information:\n\n${missingList}\n\nClick the link below to edit your registration:\n${editLink}`;
+    setReminderModal(record);
+    setReminderMessage(defaultMessage);
+  };
+
+  const handleSendReminderEmail = async () => {
+    if (!reminderModal || !reminderMessage.trim()) {
+      showToast(t.pleaseEnterMessage, 'warning');
+      return;
+    }
+    try {
+      await storage.sendReminderEmail(reminderModal, getMissingFields(reminderModal), reminderMessage, language);
+      showToast(t.reminderSentSuccessfully, 'success');
+      setReminderModal(null);
+      setReminderMessage('');
+    } catch (error) {
+      console.error('Error sending reminder email:', error);
+      showToast('Error sending reminder email. Please try again.', 'error');
+    }
+  };
+
   const handleApprove = async (record) => {
     if (record.invitation_status === 'Approved' || record.invitation_status === 'Rejected') {
       return;
     }
+    if (processingRef.current.has(record.id)) {
+      return;
+    }
+    processingRef.current.add(record.id);
     try {
       const updatedRecord = { ...record, invitation_status: 'Approved' };
       await storage.updateRegistration(record.id, {
@@ -113,14 +190,21 @@ const AdminPage = ({ language, onBack }) => {
       });
       await storage.archiveRegistration(updatedRecord, 'Approved');
       await storage.deleteRegistration(record.id);
-      alert(t.registrationApprovedAndArchived);
+      try {
+        await storage.sendApprovalEmail(updatedRecord);
+      } catch (emailError) {
+        console.error('Approval email error:', emailError);
+      }
+      showToast(t.registrationApprovedAndArchived, 'success');
       setRecords(prev => prev.filter(r => r.id !== record.id));
       await loadArchivedRegistrations();
       await loadRegistrations();
     } catch (error) {
       console.error('Error approving registration:', error);
-      alert('Error approving registration');
+      showToast('Error approving registration', 'error');
       await loadRegistrations();
+    } finally {
+      processingRef.current.delete(record.id);
     }
   };
 
@@ -128,11 +212,16 @@ const AdminPage = ({ language, onBack }) => {
     if (record.invitation_status === 'Approved' || record.invitation_status === 'Rejected') {
       return;
     }
+    if (processingRef.current.has(record.id)) {
+      return;
+    }
+    processingRef.current.add(record.id);
     const selectedReasons = rejectionReasons[record.id] || [];
     const customReason = rejectionReasons[`${record.id}_other`] || '';
 
     if (selectedReasons.length === 0 && !customReason.trim()) {
-      alert(t.pleaseSelectRejectionReason);
+      showToast(t.pleaseSelectRejectionReason, 'warning');
+      processingRef.current.delete(record.id);
       return;
     }
 
@@ -148,7 +237,12 @@ const AdminPage = ({ language, onBack }) => {
       });
       await storage.archiveRegistration(updatedRecord, reasonText);
       await storage.deleteRegistration(record.id);
-      alert(t.registrationRejectedAndArchived);
+      try {
+        await storage.sendRejectionEmail(updatedRecord, reasonText);
+      } catch (emailError) {
+        console.error('Rejection email error:', emailError);
+      }
+      showToast(t.registrationRejectedAndArchived, 'success');
       setRecords(prev => prev.filter(r => r.id !== record.id));
       setRejectionReasons(prev => {
         const next = { ...prev };
@@ -165,8 +259,10 @@ const AdminPage = ({ language, onBack }) => {
       await loadRegistrations();
     } catch (error) {
       console.error('Error archiving registration:', error);
-      alert('Error archiving registration');
+      showToast('Error archiving registration', 'error');
       await loadRegistrations();
+    } finally {
+      processingRef.current.delete(record.id);
     }
   };
 
@@ -195,6 +291,9 @@ const AdminPage = ({ language, onBack }) => {
     try {
       const data = await storage.getArchivedRegistrations();
       setArchivedRecords(data);
+      if (data.length > 0) {
+        await loadReceiptUrls(data);
+      }
     } catch (error) {
       console.error('Error loading archived registrations:', error);
     }
@@ -203,8 +302,12 @@ const AdminPage = ({ language, onBack }) => {
   const toggleArchiveView = async () => {
     const newShowArchive = !showArchive;
     setShowArchive(newShowArchive);
-    if (newShowArchive && archivedRecords.length === 0) {
-      await loadArchivedRegistrations();
+    if (newShowArchive) {
+      if (archivedRecords.length === 0) {
+        await loadArchivedRegistrations();
+      }
+    } else {
+      await loadRegistrations();
     }
   };
 
@@ -215,20 +318,36 @@ const AdminPage = ({ language, onBack }) => {
       setArchivedRecords(prev => prev.filter(r => r.id !== record.id));
     } catch (error) {
       console.error('Error deleting archived registration:', error);
-      alert(t.errorDeletingArchived);
+      showToast(t.errorDeletingArchived, 'error');
+    }
+  };
+
+  const handleDeleteRegistration = async (record) => {
+    if (!window.confirm(t.deleteConfirm)) return;
+    try {
+      if (record.vehicle_stub) {
+        await supabase.storage.from('receipts').remove([record.vehicle_stub]);
+      }
+      await storage.deleteRegistration(record.id);
+      setRecords(prev => prev.filter(r => r.id !== record.id));
+    } catch (error) {
+      console.error('Error deleting registration:', error);
+      showToast(t.errorDeletingArchived, 'error');
+      await loadRegistrations();
     }
   };
 
   const downloadExcel = () => {
     const dataToExport = showArchive ? archivedRecords : records;
     if (dataToExport.length === 0) return;
-    const headers = ['Name', 'Surname', 'Email', 'Phone', 'DOB', 'Vehicle Model', 'Model Year', 'License Plate', 'Location', 'Reference No', 'Submitted At', 'Invitation Status'];
+    const headers = ['Name', 'Surname', 'Email', 'Phone', 'DOB', 'Vehicle Brand', 'Vehicle Model', 'Model Year', 'License Plate', 'Location', 'Reference No', 'Submitted At', 'Invitation Status'];
     const rows = dataToExport.map(r => [
       r.name,
       r.surname,
       r.email,
       r.phone,
       r.dob,
+      r.vehicle_brand,
       r.vehicle_model,
       r.model_year,
       r.license_plate,
@@ -246,29 +365,6 @@ const AdminPage = ({ language, onBack }) => {
     link.download = `serhan-kombos-otomotiv-registrations-${new Date().toISOString().slice(0, 10)}.xls`;
     link.click();
     URL.revokeObjectURL(url);
-  };
-
-  const clearAll = async () => {
-    if (window.confirm(t.confirmClear)) {
-      try {
-        const dataToClear = showArchive ? archivedRecords : records;
-        for (const record of dataToClear) {
-          if (record.vehicle_stub) {
-            await supabase.storage.from('receipts').remove([record.vehicle_stub]);
-          }
-          if (!showArchive) {
-            await storage.deleteRegistration(record.id);
-          }
-        }
-        if (!showArchive) {
-          setRecords([]);
-        } else {
-          setArchivedRecords([]);
-        }
-      } catch (error) {
-        console.error('Error clearing records:', error);
-      }
-    }
   };
 
   const handleLogout = async () => {
@@ -301,7 +397,7 @@ const AdminPage = ({ language, onBack }) => {
             <p>{t.adminSubtitle}</p>
           </div>
           <div className="page-actions">
-            <button type="button" className="btn-secondary" onClick={onBack}>
+            <button type="button" className="btn-ghost" onClick={onBack} title={t.backToForm}>
               <ArrowLeft size={16} style={{ marginRight: 6 }} />
               {t.backToForm}
             </button>
@@ -327,7 +423,7 @@ const AdminPage = ({ language, onBack }) => {
                 email: email,
                 password: password
               });
-              if (error) alert(error.message);
+              if (error) showToast(error.message, 'error');
               else checkAuth();
             }}>
               {t.login}
@@ -339,6 +435,15 @@ const AdminPage = ({ language, onBack }) => {
   }
 
   const dataToShow = showArchive ? archivedRecords : records;
+  const totalPages = Math.max(1, Math.ceil(dataToShow.length / itemsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedData = dataToShow.slice((safeCurrentPage - 1) * itemsPerPage, safeCurrentPage * itemsPerPage);
+
+  const goToPage = (page) => {
+    const next = Math.max(1, Math.min(page, totalPages));
+    setCurrentPage(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="container admin-container">
@@ -348,24 +453,16 @@ const AdminPage = ({ language, onBack }) => {
           <p>{showArchive ? t.archivedRegistrations : t.adminSubtitle}</p>
         </div>
         <div className="page-actions">
-          <button type="button" className="btn-secondary" onClick={onBack}>
-            <ArrowLeft size={16} style={{ marginRight: 6 }} />
-            {t.backToForm}
-          </button>
-          <button type="button" className="btn-secondary" onClick={downloadExcel} disabled={dataToShow.length === 0}>
-            <Download size={16} style={{ marginRight: 6 }} />
+          <button type="button" className="btn-ghost" onClick={downloadExcel} disabled={dataToShow.length === 0} title={t.downloadExcel}>
+            <Download size={18} style={{ marginRight: 6 }} />
             {t.downloadExcel}
           </button>
-          {!showArchive && (
-            <button type="button" className="btn-danger" onClick={clearAll} disabled={records.length === 0}>
-              <Trash size={16} style={{ marginRight: 6 }} />
-              {t.clearAll}
-            </button>
-          )}
-          <button type="button" className="btn-secondary" onClick={toggleArchiveView}>
+          <button type="button" className="btn-ghost" onClick={toggleArchiveView} title={showArchive ? t.activeRegistrations : t.viewArchive}>
+            <Archive size={18} style={{ marginRight: 6 }} />
             {showArchive ? t.activeRegistrations : t.viewArchive}
           </button>
-          <button type="button" className="btn-secondary" onClick={handleLogout}>
+          <button type="button" className="btn-ghost" onClick={handleLogout} title={t.logout}>
+            <LogOut size={18} style={{ marginRight: 6 }} />
             {t.logout}
           </button>
         </div>
@@ -379,7 +476,7 @@ const AdminPage = ({ language, onBack }) => {
 
       <div className="table-wrapper admin-table-wrapper">
         <AdminTable
-          dataToShow={dataToShow}
+          dataToShow={paginatedData}
           showArchive={showArchive}
           language={language}
           t={t}
@@ -394,11 +491,15 @@ const AdminPage = ({ language, onBack }) => {
           onOtherChange={handleOtherReasonChange}
           onConfirmRejection={handleArchiveRecord}
           onDeleteArchived={handleDeleteArchived}
+          onDeleteRegistration={handleDeleteRegistration}
+          isRecordIncomplete={isRecordIncomplete}
+          onSendReminder={handleSendReminder}
+          isProcessing={(id) => processingRef.current.has(id)}
         />
       </div>
 
       <AdminMobileCards
-        dataToShow={dataToShow}
+        dataToShow={paginatedData}
         showArchive={showArchive}
         language={language}
         t={t}
@@ -413,7 +514,49 @@ const AdminPage = ({ language, onBack }) => {
         onOtherChange={handleOtherReasonChange}
         onConfirmRejection={handleArchiveRecord}
         onDeleteArchived={handleDeleteArchived}
+        onDeleteRegistration={handleDeleteRegistration}
+        isRecordIncomplete={isRecordIncomplete}
+        onSendReminder={handleSendReminder}
+        isProcessing={(id) => processingRef.current.has(id)}
       />
+
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button type="button" className="btn-secondary" onClick={() => goToPage(safeCurrentPage - 1)} disabled={safeCurrentPage === 1}>
+            {language === 'en' ? 'Previous' : 'Önceki'}
+          </button>
+          <span className="pagination-info">
+            {language === 'en' ? 'Page' : 'Sayfa'} {safeCurrentPage} / {totalPages}
+          </span>
+          <button type="button" className="btn-secondary" onClick={() => goToPage(safeCurrentPage + 1)} disabled={safeCurrentPage === totalPages}>
+            {language === 'en' ? 'Next' : 'Sonraki'}
+          </button>
+        </div>
+      )}
+
+      {reminderModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>{t.sendReminder}</h3>
+            <p><strong>To:</strong> {reminderModal.email}</p>
+            <p><strong>Reference:</strong> {reminderModal.reference_number}</p>
+            <textarea
+              value={reminderMessage}
+              onChange={(e) => setReminderMessage(e.target.value)}
+              rows={12}
+              style={{ width: '100%', marginTop: 12, padding: 12, fontSize: 14, fontFamily: 'inherit' }}
+            />
+            <div className="button-group" style={{ marginTop: 16 }}>
+              <button type="button" className="btn-secondary" onClick={() => { setReminderModal(null); setReminderMessage(''); }}>
+                {t.cancel}
+              </button>
+              <button type="button" className="btn-primary" onClick={handleSendReminderEmail}>
+                {t.sendMessage}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -6,9 +6,46 @@ import DatePicker from './DatePicker';
 const RegistrationForm = ({ language, formData, setFormData, fileName, setFileName, onSubmit, onSaveDraft }) => {
   const t = translations[language];
 
+  const mercedesModels = [
+    'A-Class',
+    'B-Class',
+    'C-Class',
+    'CLA',
+    'CLS',
+    'E-Class',
+    'G-Class',
+    'GLA',
+    'GLB',
+    'GLC',
+    'GLE',
+    'GLS',
+    'S-Class',
+    'AMG GT',
+    'V-Class',
+    'X-Class'
+  ];
+
+  const isValidModel = mercedesModels.includes(formData.vehicleModel);
+  const [isOtherModel, setIsOtherModel] = React.useState(() => !isValidModel && !!formData.vehicleModel);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleModelChange = (e) => {
+    const value = e.target.value;
+    if (value === 'other') {
+      setIsOtherModel(true);
+      setFormData(prev => ({ ...prev, vehicleModel: '' }));
+    } else {
+      setIsOtherModel(false);
+      setFormData(prev => ({ ...prev, vehicleModel: value }));
+    }
+  };
+
+  const handleOtherModelChange = (e) => {
+    setFormData(prev => ({ ...prev, vehicleModel: e.target.value }));
   };
 
   const formatPhone = (value) => {
@@ -25,6 +62,20 @@ const RegistrationForm = ({ language, formData, setFormData, fileName, setFileNa
     const formatted = formatPhone(e.target.value);
     setFormData(prev => ({ ...prev, phone: formatted }));
   };
+
+  const isFormComplete = Boolean(
+    formData.name?.trim() &&
+    formData.surname?.trim() &&
+    formData.email?.trim() &&
+    formData.phone?.trim() &&
+    formData.dob &&
+    formData.vehicleBrand &&
+    formData.vehicleModel?.trim() &&
+    formData.modelYear &&
+    formData.licensePlate?.trim() &&
+    formData.location &&
+    formData.vehicleStub
+  );
 
   const compressImage = (file) => {
     return new Promise((resolve, reject) => {
@@ -175,16 +226,53 @@ const RegistrationForm = ({ language, formData, setFormData, fileName, setFileNa
       />
 
       <div className="form-group">
+        <label htmlFor="vehicleBrand">{t.vehicleBrand} <span className="required">*</span></label>
+        <div className="select-wrapper">
+          <select
+            id="vehicleBrand"
+            name="vehicleBrand"
+            value={formData.vehicleBrand}
+            onChange={handleChange}
+            required
+          >
+            <option value="Mercedes-Benz">Mercedes-Benz</option>
+          </select>
+          <ChevronDown className="select-icon" size={14} />
+        </div>
+      </div>
+
+      <div className="form-group">
         <label htmlFor="vehicleModel">{t.vehicleModel} <span className="required">*</span></label>
-        <input
-          type="text"
-          id="vehicleModel"
-          name="vehicleModel"
-          placeholder={t.placeholderVehicleModel}
-          value={formData.vehicleModel}
-          onChange={handleChange}
-          required
-        />
+        <div className="select-wrapper">
+          <select
+            id="vehicleModel"
+            name="vehicleModel"
+            value={isOtherModel ? 'other' : formData.vehicleModel}
+            onChange={handleModelChange}
+            required
+          >
+            <option value="">{t.pleaseSelect}</option>
+            {mercedesModels.map(model => (
+              <option key={model} value={model}>
+                {model}
+              </option>
+            ))}
+            <option value="other">{t.otherReason}</option>
+          </select>
+          <ChevronDown className="select-icon" size={14} />
+        </div>
+        {isOtherModel && (
+          <input
+            type="text"
+            id="vehicleModelOther"
+            name="vehicleModelOther"
+            placeholder={t.placeholderVehicleModel}
+            value={formData.vehicleModel}
+            onChange={handleOtherModelChange}
+            required
+            style={{ marginTop: 8 }}
+          />
+        )}
       </div>
 
       <div className="form-group">
@@ -198,7 +286,7 @@ const RegistrationForm = ({ language, formData, setFormData, fileName, setFileNa
             required
           >
             <option value="">{t.pleaseSelect}</option>
-            {Array.from({ length: 35 }, (_, i) => {
+            {Array.from({ length: new Date().getFullYear() - 1940 + 1 }, (_, i) => {
               const year = new Date().getFullYear() - i;
               return (
                 <option key={year} value={year}>
@@ -225,7 +313,7 @@ const RegistrationForm = ({ language, formData, setFormData, fileName, setFileNa
       </div>
 
       <div className="form-group">
-        <label>{t.uploadStub} <span className="required">*</span></label>
+        <label>{t.uploadStub}</label>
         <div className="file-upload" onClick={() => document.getElementById('vehicleStub').click()}>
           <input
             type="file"
@@ -233,7 +321,6 @@ const RegistrationForm = ({ language, formData, setFormData, fileName, setFileNa
             name="vehicleStub"
             accept="image/*,.pdf"
             onChange={handleFileChange}
-            required
           />
           <div className="file-upload-content">
             <Upload className="upload-icon" size={28} />
@@ -271,11 +358,16 @@ const RegistrationForm = ({ language, formData, setFormData, fileName, setFileNa
       </div>
 
       <div className="button-group">
-        <button type="button" className="btn-secondary" onClick={onSaveDraft}>
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={onSaveDraft}
+          disabled={isFormComplete}
+        >
           <Save size={16} style={{ marginRight: 6 }} />
           {t.continueLater}
         </button>
-        <button type="submit" className="btn-primary">
+        <button type="submit" className="btn-primary" disabled={!isFormComplete}>
           <Check size={16} style={{ marginRight: 6 }} />
           {t.completeRegistration}
         </button>

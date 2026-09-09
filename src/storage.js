@@ -1,7 +1,9 @@
 import { supabase } from './supabaseClient';
 
 const SUPABASE_PROJECT_REF = 'urtmleicijluwonalidr';
+// eslint-disable-next-line no-unused-vars
 const EDGE_EMAIL_URL = `https://${SUPABASE_PROJECT_REF}.supabase.co/functions/v1/rapid-service`;
+const BASE_URL = typeof window !== 'undefined' ? window.location.origin : '';
 
 export const getRegistrations = async () => {
   const { data, error } = await supabase
@@ -15,6 +17,80 @@ export const getRegistrations = async () => {
   }
   
   return data || [];
+};
+
+export const findActiveRegistrationByEmail = async (email) => {
+  if (!email) return null;
+  const { data, error } = await supabase
+    .from('registrations')
+    .select('id, reference_number, invitation_status')
+    .eq('email', email)
+    .neq('invitation_status', 'Rejected')
+    .order('submitted_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error checking duplicate email:', error);
+    return null;
+  }
+
+  return data || null;
+};
+
+export const findArchivedRegistrationByEmail = async (email) => {
+  if (!email) return null;
+  const { data, error } = await supabase
+    .from('archived_registrations')
+    .select('id, reference_number, invitation_status')
+    .eq('email', email)
+    .order('submitted_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error checking archived duplicate email:', error);
+    return null;
+  }
+
+  if (data && data.invitation_status === 'Approved') {
+    return data;
+  }
+
+  return null;
+};
+
+export const getRegistrationByReference = async (referenceNumber) => {
+  if (!referenceNumber) return null;
+  const { data, error } = await supabase
+    .from('registrations')
+    .select('*')
+    .eq('reference_number', referenceNumber)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching registration by reference:', error);
+    return null;
+  }
+
+  return data || null;
+};
+
+export const updateRegistrationByReference = async (referenceNumber, updates) => {
+  if (!referenceNumber) return null;
+  const { data, error } = await supabase
+    .from('registrations')
+    .update(updates)
+    .eq('reference_number', referenceNumber)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating registration by reference:', error);
+    throw error;
+  }
+
+  return data || null;
 };
 
 export const saveRegistration = async (registration) => {
@@ -84,7 +160,7 @@ export const sendConfirmationEmail = async (registration) => {
 <body>
   <div class="container">
     <div class="header">
-      <img src="REPLACE_WITH_MERCEDES_LOGO_URL" alt="Mercedes Logo" />
+      <img src="https://urtmleicijluwonalidr.supabase.co/storage/v1/object/public/logos/merclogo.webp" alt="Mercedes Logo" />
     </div>
     <div class="body">
       <div style="text-align: center; margin-bottom: 8px;">
@@ -94,13 +170,13 @@ export const sendConfirmationEmail = async (registration) => {
       <p>Your registration has been received successfully.</p>
       <div class="card" style="text-align: center;">
         <p class="card-title">Your Reference Number</p>
-        <p class="ref-number">${registration.reference_number}</p>
+        <p class="ref-number"><a href="${BASE_URL}?ref=${registration.reference_number}" style="color: #000000; text-decoration: none;">${registration.reference_number}</a></p>
       </div>
       <div class="highlight-box">
         <p><strong>Event:</strong> Kombos Otomotiv Bingo</p>
         <p><strong>Prize:</strong> 500,000 TL cash prize</p>
       </div>
-      <p>Keep this reference number for your records. We will review your details and send your invitation once your receipt is verified.</p>
+      <p>Keep this reference number for your records. We will review your details and send your invitation once your car document is verified.</p>
     </div>
     <div class="footer">
       &copy; ${new Date().getFullYear()} Serhan Kombos Otomotiv. All rights reserved.
@@ -113,6 +189,84 @@ export const sendConfirmationEmail = async (registration) => {
     console.log('Email invoke result:', { data, error });
   } catch (emailError) {
     console.error('Error sending confirmation email:', emailError);
+  }
+};
+
+export const sendReminderEmail = async (registration, missingFields = [], customMessage = '', language = 'en') => {
+  if (!registration?.email) return;
+
+  const missingList = missingFields.map(field => `- ${field}`).join('<br>');
+  const editLink = `${BASE_URL}?ref=${registration.reference_number}`;
+  const subject = language === 'tr' ? 'Hatırlatma: Lütfen kaydınızı tamamlayın' : 'Reminder: Please complete your registration';
+
+  const greeting = language === 'tr' ? `Merhaba ${registration.name} ${registration.surname},` : `Hello ${registration.name} ${registration.surname},`;
+  const intro = language === 'tr'
+    ? 'Kaydınızda eksik alanlar var. Lütfen aşağıdaki bilgileri tamamlayın:'
+    : 'We noticed that your registration is missing some required details. Please complete the following:';
+  const missingLabel = language === 'tr' ? 'Eksik alanlar:' : 'Missing fields:';
+  const messageLabel = language === 'tr' ? 'Mesaj:' : 'Message:';
+  const linkLabel = language === 'tr'
+    ? 'Kaydınızı düzenlemek için bu bağlantıya tıklayın:'
+    : 'Click the link below to edit and complete your registration:';
+
+  try {
+    console.log('Sending reminder email to:', registration.email);
+    await supabase.functions.invoke('rapid-service', {
+      body: {
+        to: registration.email,
+        from: 'Serhan Kombos Otomotiv <noreply@kombosdms.com>',
+        subject,
+        html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${subject}</title>
+  <style>
+    body { margin: 0; padding: 0; background-color: #f4f6f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .container { max-width: 600px; margin: 24px auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .header { background-color: #000000; padding: 24px 32px; text-align: center; }
+    .header img { max-height: 60px; max-width: 180px; }
+    .body { padding: 32px; color: #1f2937; font-size: 15px; line-height: 1.7; }
+    .body p { margin: 0 0 16px; }
+    .highlight-box { background-color: #ffffff; border-left: 4px solid #000000; padding: 14px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+    .highlight-box p { margin: 0 0 6px; }
+    .highlight-box strong { color: #000000; }
+    .footer { padding: 20px 32px; text-align: center; color: #9ca3af; font-size: 12px; border-top: 1px solid #e5e7eb; }
+    .event-badge { display: inline-block; background: #000000; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="https://urtmleicijluwonalidr.supabase.co/storage/v1/object/public/logos/merclogo.webp" alt="Mercedes Logo" />
+    </div>
+    <div class="body">
+      <div style="text-align: center; margin-bottom: 8px;">
+        <span class="event-badge">Kombos Otomotiv Bingo</span>
+      </div>
+      <p style="font-size: 18px; font-weight: 600; color: #000000; margin: 0 0 12px;">${greeting}</p>
+      <p>${intro}</p>
+      <div class="highlight-box">
+        <p><strong>${missingLabel}</strong></p>
+        <p>${missingList}</p>
+      </div>
+      ${customMessage ? `<div class="highlight-box"><p><strong>${messageLabel}</strong></p><p>${customMessage.replace(/\n/g, '<br>')}</p></div>` : ''}
+      <p>${linkLabel}</p>
+      <p><a href="${editLink}" style="color: #000000; text-decoration: none; font-weight: 600;">${editLink}</a></p>
+    </div>
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} Serhan Kombos Otomotiv. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>`
+      }
+    });
+    console.log('Reminder email sent to:', registration.email);
+  } catch (emailError) {
+    console.error('Error sending reminder email:', emailError);
+    throw emailError;
   }
 };
 
@@ -166,7 +320,7 @@ export const sendMessage = async (registrationId, message, type = 'custom') => {
 <body>
   <div class="container">
     <div class="header">
-      <img src="REPLACE_WITH_MERCEDES_LOGO_URL" alt="Mercedes Logo" />
+      <img src="https://urtmleicijluwonalidr.supabase.co/storage/v1/object/public/logos/merclogo.webp" alt="Mercedes Logo" />
     </div>
     <div class="body">
       <div style="text-align: center; margin-bottom: 8px;">
@@ -245,7 +399,7 @@ export const sendRejectionEmail = async (registration, reason) => {
 <body>
   <div class="container">
     <div class="header">
-      <img src="REPLACE_WITH_MERCEDES_LOGO_URL" alt="Mercedes Logo" />
+      <img src="https://urtmleicijluwonalidr.supabase.co/storage/v1/object/public/logos/merclogo.webp" alt="Mercedes Logo" />
     </div>
     <div class="body">
       <div style="text-align: center; margin-bottom: 8px;">
@@ -278,7 +432,67 @@ export const sendRejectionEmail = async (registration, reason) => {
   return data;
 };
 
-export const archiveRegistration = async (registration, reason = 'Rejected') => {
+export const sendApprovalEmail = async (registration) => {
+  if (registration.email) {
+    try {
+      console.log('Sending approval email to:', registration.email);
+      const { error: emailError } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: registration.email,
+          from: 'Serhan Kombos Otomotiv <noreply@kombosdms.com>',
+          subject: 'Your registration has been approved',
+          html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registration Approved</title>
+  <style>
+    body { margin: 0; padding: 0; background-color: #f4f6f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .container { max-width: 600px; margin: 24px auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .header { background-color: #000000; padding: 24px 32px; text-align: center; }
+    .header img { max-height: 60px; max-width: 180px; }
+    .body { padding: 32px; color: #1f2937; font-size: 15px; line-height: 1.7; }
+    .body p { margin: 0 0 16px; }
+    .highlight-box { background-color: #ffffff; border-left: 4px solid #000000; padding: 14px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+    .highlight-box p { margin: 0 0 6px; }
+    .highlight-box strong { color: #000000; }
+    .footer { padding: 20px 32px; text-align: center; color: #9ca3af; font-size: 12px; border-top: 1px solid #e5e7eb; }
+    .event-badge { display: inline-block; background: #000000; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="https://urtmleicijluwonalidr.supabase.co/storage/v1/object/public/logos/merclogo.webp" alt="Mercedes Logo" />
+    </div>
+    <div class="body">
+      <div style="text-align: center; margin-bottom: 8px;">
+        <span class="event-badge">Kombos Otomotiv Bingo</span>
+      </div>
+      <div class="highlight-box">
+        <p><strong>Event:</strong> Kombos Otomotiv Bingo</p>
+        <p><strong>Prize:</strong> 500,000 TL cash prize</p>
+      </div>
+      <p>Your registration has been approved.</p>
+      ${registration.reference_number ? `<div class="highlight-box"><p><strong>Reference No:</strong> ${registration.reference_number}</p></div>` : ''}
+    </div>
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} Serhan Kombos Otomotiv. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>`
+        }
+      });
+      if (emailError) {
+        console.error('Approval email error:', emailError);
+      }
+    } catch (emailError) {
+      console.error('Error sending approval email via Edge Function:', emailError);
+    }
+  }
+};
   const archived = {
     original_id: registration.id,
     name: registration.name,
@@ -286,6 +500,7 @@ export const archiveRegistration = async (registration, reason = 'Rejected') => 
     email: registration.email,
     phone: registration.phone,
     dob: registration.dob,
+    vehicle_brand: registration.vehicle_brand,
     vehicle_model: registration.vehicle_model,
     model_year: registration.model_year,
     license_plate: registration.license_plate,
@@ -457,6 +672,106 @@ export const getReminders = async (registrationId) => {
   return data || [];
 };
 
+export const saveDraftRegistration = async (registration) => {
+  const referenceNumber = `KOMBOS-2026-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+  let receiptPath = registration.vehicle_stub;
+  if (receiptPath instanceof File) {
+    try {
+      receiptPath = await uploadReceipt(receiptPath);
+    } catch (uploadError) {
+      console.error('Error uploading draft receipt:', uploadError);
+      receiptPath = null;
+    }
+  }
+  const draftRecord = {
+    ...registration,
+    reference_number: referenceNumber,
+    vehicle_stub: receiptPath,
+    receipt_status: receiptPath ? 'Submitted' : 'Pending',
+    verification_status: 'Pending',
+    invitation_status: 'Pending',
+    submitted_at: new Date().toISOString()
+  };
+
+  const { data, error } = await supabase
+    .from('registrations')
+    .insert([draftRecord])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error saving draft registration:', error);
+    throw error;
+  }
+
+  if (data?.email) {
+    try {
+      await supabase.functions.invoke('rapid-service', {
+        body: {
+          to: data.email,
+          from: 'Serhan Kombos Otomotiv <noreply@kombosdms.com>',
+          subject: 'Continue your registration - Serhan Kombos Otomotiv',
+          html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Continue Registration</title>
+  <style>
+    body { margin: 0; padding: 0; background-color: #f4f6f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .container { max-width: 600px; margin: 24px auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .header { background-color: #000000; padding: 24px 32px; text-align: center; }
+    .header img { max-height: 60px; max-width: 180px; }
+    .body { padding: 32px; color: #1f2937; font-size: 15px; line-height: 1.7; }
+    .body p { margin: 0 0 16px; }
+    .card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px 20px; margin: 20px 0; }
+    .card-title { font-size: 13px; text-transform: uppercase; letter-spacing: 0.8px; color: #6b7280; margin: 0 0 10px; }
+    .ref-number { font-size: 22px; font-weight: 700; color: #000000; letter-spacing: 1px; margin: 0; }
+    .ref-number a { color: #000000; text-decoration: none; }
+    .highlight-box { background-color: #ffffff; border-left: 4px solid #000000; padding: 14px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+    .highlight-box p { margin: 0 0 6px; }
+    .highlight-box strong { color: #000000; }
+    .footer { padding: 20px 32px; text-align: center; color: #9ca3af; font-size: 12px; border-top: 1px solid #e5e7eb; }
+    .event-badge { display: inline-block; background: #000000; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="https://urtmleicijluwonalidr.supabase.co/storage/v1/object/public/logos/merclogo.webp" alt="Mercedes Logo" />
+    </div>
+    <div class="body">
+      <div style="text-align: center; margin-bottom: 8px;">
+        <span class="event-badge">Kombos Otomotiv Bingo</span>
+      </div>
+      <p style="font-size: 18px; font-weight: 600; color: #000000; margin: 0 0 12px;">Hello ${registration.name} ${registration.surname},</p>
+      <p>You have saved your registration. Click the link below to continue where you left off.</p>
+      <div class="card" style="text-align: center;">
+        <p class="card-title">Your Reference Number</p>
+        <p class="ref-number"><a href="${BASE_URL}?ref=${referenceNumber}">${referenceNumber}</a></p>
+      </div>
+      <div class="highlight-box">
+        <p><strong>Event:</strong> Kombos Otomotiv Bingo</p>
+        <p><strong>Prize:</strong> 500,000 TL cash prize</p>
+      </div>
+    </div>
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} Serhan Kombos Otomotiv. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>`
+        }
+      });
+      console.log('Draft email sent to:', data.email);
+    } catch (emailError) {
+      console.error('Error sending draft email:', emailError);
+    }
+  }
+
+  return data;
+};
+
 export const getDraft = () => {
   return JSON.parse(localStorage.getItem('registrationDraft') || 'null');
 };
@@ -473,10 +788,16 @@ const storage = {
   getRegistrations,
   saveRegistration,
   updateRegistration,
+  findActiveRegistrationByEmail,
+  findArchivedRegistrationByEmail,
+  getRegistrationByReference,
+  updateRegistrationByReference,
+  saveDraftRegistration,
   archiveRegistration,
   deleteRegistration,
   deleteArchivedRegistration,
   sendConfirmationEmail,
+  sendReminderEmail,
   getArchivedRegistrations,
   uploadReceipt,
   getReceiptUrl,
@@ -484,7 +805,9 @@ const storage = {
   getReminders,
   getDraft,
   saveDraft,
-  clearDraft
+  clearDraft,
+  sendApprovalEmail,
+  sendRejectionEmail
 };
 
 export default storage;

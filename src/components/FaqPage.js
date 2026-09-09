@@ -8,34 +8,34 @@ const FaqPage = ({ language, onBack }) => {
 
   const faqs = [
     {
-      question: language === 'en' ? 'Do I need to upload my receipt when registering?' : 'Kayıt olurken makbuzumu yüklemem gerekiyor mu?',
+      question: language === 'en' ? 'Do I need to upload my car document when registering?' : 'Kayıt olurken koçanımı yüklemem gerekiyor mu?',
       answer: language === 'en'
-        ? 'Receipt upload may be optional during registration. If you do not upload your receipt at the time of registration, you will be asked to submit it separately before the specified deadline.'
-        : 'Kayıt sırasında makbuz yükleme isteğe bağlı olabilir. Kayıt sırasında makbuzunuzu yüklemezseniz, belirtilen son tarihten önce ayrı olarak göndermeniz istenecektir.'
+        ? 'Car document upload may be optional during registration. If you do not upload your car document at the time of registration, you will be asked to submit it separately before the specified deadline.'
+        : 'Kayıt sırasında koçan yükleme isteğe bağlı olabilir. Kayıt sırasında koçanınızı yüklemezseniz, belirtilen son tarihten önce ayrı olarak göndermeniz istenecektir.'
     },
     {
-      question: language === 'en' ? 'What happens after I upload my receipt?' : 'Makbuzumu yükledikten sonra ne olur?',
+      question: language === 'en' ? 'What happens after I upload my car document?' : 'Koçanımı yükledikten sonra ne olur?',
       answer: language === 'en'
-        ? 'Once your receipt is submitted, you will receive an email and/or WhatsApp confirmation. Your registration will then proceed to the receipt verification process.'
-        : 'Makbuzunuz gönderildikten sonra bir e-posta ve/veya WhatsApp onayı alacaksınız. Kaydınız daha sonra makbuz doğrulama sürecine geçecektir.'
+        ? 'Once your car document is submitted, you will receive an email confirmation. Your registration will then proceed to the car document verification process.'
+        : 'Koçanınız gönderildikten sonra bir e-posta onayı alacaksınız. Kaydınız daha sonra koçan doğrulama sürecine geçecektir.'
     },
     {
       question: language === 'en' ? 'When will I receive my invitation?' : 'Davetiyemi ne zaman alacağım?',
       answer: language === 'en'
-        ? 'Your invitation will be sent once your receipt has been successfully verified.'
-        : 'Makbuzunuz başarıyla doğrulandıktan sonra davetiniz gönderilecektir.'
+        ? 'Your invitation will be sent once your car document has been successfully verified.'
+        : 'Koçanınız başarıyla doğrulandıktan sonra davetiniz gönderilecektir.'
     },
     {
-      question: language === 'en' ? 'What if I complete my registration without uploading my receipt?' : 'Kaydımı makbuz yüklemeden tamamlarsam ne olur?',
+      question: language === 'en' ? 'What if I complete my registration without uploading my car document?' : 'Kaydımı koçan yüklemeden tamamlarsam ne olur?',
       answer: language === 'en'
-        ? 'You will receive an email and/or WhatsApp message reminding you to submit your receipt by the specified deadline.'
-        : 'Belirtilen son tarihe kadar makbuzunuzu göndermeniz konusunda sizi hatırlatan bir e-posta ve/veya WhatsApp mesajı alacaksınız.'
+        ? 'You will receive an email reminder to submit your car document by the specified deadline.'
+        : 'Belirtilen son tarihe kadar koçanınızı göndermeniz konusunda sizi hatırlatan bir e-posta mesajı alacaksınız.'
     },
     {
-      question: language === 'en' ? 'What happens if I forget to send my receipt?' : 'Makbuzumu göndermeyi unutursam ne olur?',
+      question: language === 'en' ? 'What happens if I forget to send my car document?' : 'Koçanımı göndermeyi unutursam ne olur?',
       answer: language === 'en'
-        ? 'If your receipt has not been submitted, you will receive a follow-up email and/or WhatsApp message approximately 3 days after registration.'
-        : 'Makbuzunuz gönderilmediyse, kayıttan yaklaşık 3 gün sonra bir takip e-postası ve/veya WhatsApp mesajı alacaksınız.'
+        ? 'If your car document has not been submitted, you will receive a follow-up email approximately 3 days after registration.'
+        : 'Koçanınız gönderilmediyse, kayıttan yaklaşık 3 gün sonra bir takip e-postası alacaksınız.'
     },
     {
       question: language === 'en' ? 'Will I receive reminders about the event?' : 'Etkinlikle ilgili hatırlatmalar alacağım?',
@@ -46,14 +46,14 @@ const FaqPage = ({ language, onBack }) => {
     {
       question: language === 'en' ? 'How will I receive the reminders?' : 'Hatırlatmaları nasıl alacağım?',
       answer: language === 'en'
-        ? 'Reminders may be sent by email and/or WhatsApp, depending on the contact details provided during registration.'
-        : 'Hatırlatmalar, kayıt sırasında verilen iletişim bilgilerine bağlı olarak e-posta ve/veya WhatsApp ile gönderilebilir.'
+        ? 'Reminders may be sent by email, depending on the contact details provided during registration.'
+        : 'Hatırlatmalar, kayıt sırasında verilen iletişim bilgilerine bağlı olarak e-posta ile gönderilebilir.'
     },
     {
-      question: language === 'en' ? 'What should I do if I have a problem uploading my receipt?' : 'Makbuzumu yüklerken sorun yaşarsam ne yapmalıyım?',
+      question: language === 'en' ? 'What should I do if I have a problem uploading my car document?' : 'Koçanımı yüklerken sorun yaşarsam ne yapmalıyım?',
       answer: language === 'en'
-        ? 'If you experience any issues uploading your receipt, please contact the event support team for assistance or use the alternative receipt submission method provided.'
-        : 'Makbuzunuzu yüklerken herhangi bir sorun yaşarsanız, lütfen yardım için etkinlik destek ekibiyle iletişime geçin veya sağlanan alternatif makbuz gönderme yöntemini kullanın.'
+        ? 'If you experience any issues uploading your car document, please contact the event support team for assistance or use the alternative car document submission method provided.'
+        : 'Koçanınızı yüklerken herhangi bir sorun yaşarsanız, lütfen yardım için etkinlik destek ekibiyle iletişime geçin veya sağlanan alternatif koçan gönderme yöntemini kullanın.'
     }
   ];
 

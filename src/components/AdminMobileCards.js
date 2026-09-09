@@ -1,5 +1,6 @@
 import React from 'react';
 import RejectionForm from './RejectionForm';
+import { Trash } from '../icons';
 
 const AdminMobileCards = ({
   dataToShow,
@@ -13,10 +14,14 @@ const AdminMobileCards = ({
   rejectionReasonOptions,
   onApprove,
   onDeleteArchived,
+  onDeleteRegistration,
   onToggleRejectionForm,
   onReasonChange,
   onOtherChange,
-  onConfirmRejection
+  onConfirmRejection,
+  isRecordIncomplete,
+  onSendReminder,
+  isProcessing
 }) => {
   if (dataToShow.length === 0) {
     return <div className="empty-state">{t.noRecords}</div>;
@@ -46,6 +51,10 @@ const AdminMobileCards = ({
               <span className="admin-mobile-field-value">{record.dob}</span>
             </div>
             <div className="admin-mobile-field">
+              <span className="admin-mobile-field-label">{t.vehicleBrand}</span>
+              <span className="admin-mobile-field-value">{record.vehicle_brand || '-'}</span>
+            </div>
+            <div className="admin-mobile-field">
               <span className="admin-mobile-field-label">{t.vehicleModel}</span>
               <span className="admin-mobile-field-value">{record.vehicle_model} ({record.model_year})</span>
             </div>
@@ -65,9 +74,9 @@ const AdminMobileCards = ({
               <span className="admin-mobile-field-label">{t.submittedAt}</span>
               <span className="admin-mobile-field-value">{new Date(record.submitted_at).toLocaleString()}</span>
             </div>
-            {!showArchive && record.vehicle_stub && receiptUrls[record.id] && (
+            {record.vehicle_stub && receiptUrls[record.id] && (
               <div className="admin-mobile-field">
-                <span className="admin-mobile-field-label">{t.receiptFile || 'Receipt File'}</span>
+                <span className="admin-mobile-field-label">{t.receiptFile || 'Car Document File'}</span>
                 <button
                   type="button"
                   className="btn-icon"
@@ -82,23 +91,46 @@ const AdminMobileCards = ({
             {!showArchive && (
               <div className="admin-mobile-actions">
                 <div className="admin-mobile-actions-row">
+                  {!isRecordIncomplete?.(record) && (
+                    <button
+                      type="button"
+                      className="btn-approve"
+                      onClick={() => onApprove(record)}
+                      disabled={record.invitation_status === 'Approved' || record.invitation_status === 'Rejected' || isProcessing?.(record.id)}
+                      title={t.approveRegistration}
+                    >
+                      {t.approveRegistration}
+                    </button>
+                  )}
+                  {!isRecordIncomplete?.(record) && (
+                    <button
+                      type="button"
+                      className="btn-reject"
+                      onClick={() => onToggleRejectionForm(record.id)}
+                      disabled={record.invitation_status === 'Approved' || record.invitation_status === 'Rejected' || isProcessing?.(record.id)}
+                      title={t.rejectRegistration}
+                    >
+                      {t.rejectRegistration}
+                    </button>
+                  )}
+                  {isRecordIncomplete?.(record) && (
+                    <button
+                      type="button"
+                      className="btn-send"
+                      onClick={() => onSendReminder?.(record)}
+                      title={t.sendReminder}
+                    >
+                      {t.sendReminder}
+                    </button>
+                  )}
                   <button
                     type="button"
-                    className="btn-approve"
-                    onClick={() => onApprove(record)}
-                    disabled={record.invitation_status === 'Approved' || record.invitation_status === 'Rejected'}
-                    title={t.approveRegistration}
+                    className="btn-delete"
+                    onClick={() => onDeleteRegistration?.(record)}
+                    title={t.deleteRecord}
                   >
-                    {t.approveRegistration}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-reject"
-                    onClick={() => onToggleRejectionForm(record.id)}
-                    disabled={record.invitation_status === 'Approved' || record.invitation_status === 'Rejected'}
-                    title={t.rejectRegistration}
-                  >
-                    {t.rejectRegistration}
+                    <Trash size={14} style={{ marginRight: 4 }} />
+                    {t.delete}
                   </button>
                 </div>
                 {rejectionForms[record.id] && (
@@ -114,21 +146,7 @@ const AdminMobileCards = ({
                     getStatusColor={getStatusColor}
                     t={t}
                   />
-            )}
-            {showArchive && (
-              <div className="admin-mobile-actions">
-                <div className="admin-mobile-actions-row">
-                  <button
-                    type="button"
-                    className="btn-delete"
-                    onClick={() => onDeleteArchived?.(record)}
-                    title={t.deleteRecord}
-                  >
-                    {t.delete}
-                  </button>
-                </div>
-              </div>
-            )}
+                )}
               </div>
             )}
           </div>

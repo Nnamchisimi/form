@@ -70,13 +70,17 @@ const AdminPage = ({ language, onBack, onToast }) => {
       if (record.vehicle_stub) {
         try {
           const url = await storage.getReceiptUrl(record.vehicle_stub);
-          newUrls[record.id] = url;
+          if (url) {
+            newUrls[record.id] = url;
+          } else {
+            console.warn('Missing receipt file for record', record.id, 'path:', record.vehicle_stub);
+          }
         } catch (error) {
           console.error('Error loading receipt URL for record', record.id, ':', error);
         }
       }
     }
-    setReceiptUrls(prev => ({ ...prev, ...newUrls }));
+    setReceiptUrls(newUrls);
   }, []);
 
   const loadRegistrations = useCallback(async () => {
@@ -98,8 +102,15 @@ const AdminPage = ({ language, onBack, onToast }) => {
 
   useEffect(() => {
     checkAuth();
-    loadRegistrations();
-  }, [loadRegistrations]);
+  }, []);
+
+  useEffect(() => {
+    if (session) {
+      setLoading(true);
+      setReceiptUrls({});
+      loadRegistrations();
+    }
+  }, [session, loadRegistrations]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -394,7 +405,6 @@ const AdminPage = ({ language, onBack, onToast }) => {
         <div className="page-header">
           <div>
             <h1>{t.adminTitle}</h1>
-            <p>{t.adminSubtitle}</p>
           </div>
           <div className="page-actions">
           </div>

@@ -474,7 +474,9 @@ export const sendApprovalEmail = async (registration) => {
         <p><strong>Event:</strong> Kombos Otomotiv Bingo</p>
         <p><strong>Prize:</strong> 500,000 TL cash prize</p>
       </div>
-      <p>Your registration has been approved.</p>
+      <p>Your registration is approved and has been confirmed.</p>
+      <p>Please keep this reference number safe, as you will need it later.</p>
+      <p>Note: This email cannot be used for another registration.</p>
       ${registration.reference_number ? `<div class="highlight-box"><p><strong>Reference No:</strong> ${registration.reference_number}</p></div>` : ''}
     </div>
     <div class="footer">

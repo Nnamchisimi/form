@@ -2,8 +2,8 @@ import React from 'react';
 import { ChevronDown } from '../icons';
 
 const DatePicker = ({ label, value, onChange, required }) => {
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: currentYear - 1899 }, (_, i) => currentYear - i);
+  const maxYear = 2012;
+  const years = Array.from({ length: maxYear - 1899 }, (_, i) => maxYear - i);
   const months = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: String(i + 1).padStart(2, '0') }));
   
   const getDay = (month, year) => {

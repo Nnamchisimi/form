@@ -493,6 +493,7 @@ export const sendApprovalEmail = async (registration) => {
     }
   }
 };
+export const archiveRegistration = async (registration, reason = 'Rejected') => {
   const archived = {
     original_id: registration.id,
     name: registration.name,

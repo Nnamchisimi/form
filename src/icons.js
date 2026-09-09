@@ -11,6 +11,7 @@ import StarIcon from '@mui/icons-material/Star';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
+import LoginIcon from '@mui/icons-material/Login';
 
 const sizeToFontSize = (size) => {
   if (!size || size <= 16) return 'small';
@@ -46,3 +47,4 @@ export const Star = wrapMuiIcon(StarIcon);
 export const ChevronDown = wrapMuiIcon(ExpandMoreIcon);
 export const Save = wrapMuiIcon(SaveIcon);
 export const Trash = wrapMuiIcon(DeleteIcon);
+export const Login = wrapMuiIcon(LoginIcon);

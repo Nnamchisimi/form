@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Download, Users, ArrowLeft, Archive, LogOut } from '../icons';
+import { Download, Users, ArrowLeft, Archive, LogOut, Login } from '../icons';
 import storage from '../storage';
 import { supabase } from '../supabaseClient';
 import translations from '../translations';
@@ -397,10 +397,6 @@ const AdminPage = ({ language, onBack, onToast }) => {
             <p>{t.adminSubtitle}</p>
           </div>
           <div className="page-actions">
-            <button type="button" className="btn-ghost" onClick={onBack} title={t.backToForm}>
-              <ArrowLeft size={16} style={{ marginRight: 6 }} />
-              {t.backToForm}
-            </button>
           </div>
         </div>
         <div className="admin-login">
@@ -426,7 +422,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
               if (error) showToast(error.message, 'error');
               else checkAuth();
             }}>
-              {t.login}
+              <Login size={20} />
             </button>
           </div>
         </div>

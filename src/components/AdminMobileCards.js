@@ -23,10 +23,6 @@ const AdminMobileCards = ({
   onSendReminder,
   isProcessing
 }) => {
-  if (dataToShow.length === 0) {
-    return <div className="empty-state">{t.noRecords}</div>;
-  }
-
   return (
     <div className="admin-mobile-cards">
       {dataToShow.map((record, index) => (

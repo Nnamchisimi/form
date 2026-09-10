@@ -1285,6 +1285,12 @@ button {
   margin: 0 0 6px;
 }
 
+.admin-email {
+  font-size: 0.9em;
+  color: #6b7280;
+  margin: 0 0 6px;
+}
+
 .page-header p {
   font-size: 0.95em;
   color: #6b7280;

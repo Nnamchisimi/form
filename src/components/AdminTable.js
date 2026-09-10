@@ -24,10 +24,6 @@ const AdminTable = ({
   onSendReminder,
   isProcessing
 }) => {
-  if (dataToShow.length === 0) {
-    return <div className="empty-state">{t.noRecords}</div>;
-  }
-
   return (
     <table className="admin-table">
       <thead>

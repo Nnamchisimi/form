@@ -133,6 +133,7 @@ export const sendRejectionEmail = async (registration, reason) => {
         subject: 'Update on your registration',
         html: baseEmailTemplate('Registration Update', `
           ${eventBadge()}
+          <p style="font-size: 18px; font-weight: 600; color: #000000; margin: 0 0 12px;">Hello ${registration.name} ${registration.surname},</p>
           ${highlightBox(eventInfo())}
           <p>Your registration was not approved.</p>
           <p><strong>Reason:</strong> ${reason}</p>
@@ -157,14 +158,15 @@ export const sendApprovalEmail = async (registration) => {
           to: registration.email,
           from: EMAIL_FROM,
           subject: 'Your registration has been approved',
-          html: baseEmailTemplate('Registration Approved', `
-            ${eventBadge()}
-            ${highlightBox(eventInfo())}
-            <p>Your registration is approved and has been confirmed.</p>
-            <p>Please keep this reference number safe, as you will need it later.</p>
-            <p>Note: This email cannot be used for another registration.</p>
-            ${registration.reference_number ? highlightBox(`<p><strong>Reference No:</strong> ${registration.reference_number}</p>`) : ''}
-          `)
+        html: baseEmailTemplate('Registration Approved', `
+          ${eventBadge()}
+          <p style="font-size: 18px; font-weight: 600; color: #000000; margin: 0 0 12px;">Hello ${registration.name} ${registration.surname},</p>
+          ${highlightBox(eventInfo())}
+          <p>Your registration is approved and has been confirmed.</p>
+          <p>Please keep this reference number safe, as you will need it later.</p>
+          <p>Note: This email cannot be used for another registration.</p>
+          ${registration.reference_number ? highlightBox(`<p><strong>Reference No:</strong> ${registration.reference_number}</p>`) : ''}
+        `)
         }
       });
       if (emailError) {

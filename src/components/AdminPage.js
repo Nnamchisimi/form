@@ -24,6 +24,8 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [reminderModal, setReminderModal] = useState(null);
   const [reminderMessage, setReminderMessage] = useState('');
+  const [reminderLogs, setReminderLogs] = useState([]);
+  const [adminView, setAdminView] = useState('dashboard');
   const itemsPerPage = 10;
   const t = translations[language];
 
@@ -351,6 +353,56 @@ const AdminPage = ({ language, onBack, onToast }) => {
     }
   };
 
+  const loadReminderLogs = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('reminders')
+        .select(`
+          id,
+          type,
+          message,
+          sent_at,
+          registration_id,
+          registrations (
+            name,
+            surname,
+            email,
+            reference_number
+          )
+        `)
+        .order('sent_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading reminder logs:', error);
+        return;
+      }
+
+      const formatted = (data || []).map(row => ({
+        id: row.id,
+        type: row.type,
+        message: row.message,
+        sent_at: row.sent_at,
+        registration_id: row.registration_id,
+        name: row.registrations?.name || '-',
+        surname: row.registrations?.surname || '-',
+        email: row.registrations?.email || '-',
+        reference_number: row.registrations?.reference_number || '-'
+      }));
+
+      setReminderLogs(formatted);
+    } catch (error) {
+      console.error('Error loading reminder logs:', error);
+    }
+  }, []);
+
+  const toggleReminderLog = async () => {
+    const newAdminView = adminView === 'dashboard' ? 'reminder-history' : 'dashboard';
+    setAdminView(newAdminView);
+    if (newAdminView === 'reminder-history' && reminderLogs.length === 0) {
+      await loadReminderLogs();
+    }
+  };
+
   const handleDeleteArchived = async (record) => {
     if (!window.confirm(t.deleteConfirm)) return;
     try {
@@ -491,97 +543,161 @@ const AdminPage = ({ language, onBack, onToast }) => {
 
   return (
     <div className="container admin-container">
-      <div className="page-header">
-        <div>
-          <h1>{t.adminTitle}</h1>
-          {session?.user?.email && <p className="admin-email">{session.user.email}</p>}
-          <p>{showArchive ? t.archivedRegistrations : t.adminSubtitle}</p>
-        </div>
-        <div className="page-actions">
-          <button type="button" className="btn-ghost" onClick={downloadExcel} disabled={dataToShow.length === 0} title={t.downloadExcel}>
-            <Download size={18} style={{ marginRight: 6 }} />
-            {t.downloadExcel}
-          </button>
-          <button type="button" className="btn-ghost" onClick={toggleArchiveView} title={showArchive ? t.activeRegistrations : t.viewArchive}>
-            <Archive size={18} style={{ marginRight: 6 }} />
-            {showArchive ? t.activeRegistrations : t.viewArchive}
-          </button>
-          <button type="button" className="btn-ghost" onClick={handleLogout} title={t.logout}>
-            <LogOut size={18} style={{ marginRight: 6 }} />
-            {t.logout}
-          </button>
-        </div>
-      </div>
-
-      <div className="stats-card">
-        <Users size={20} />
-        <span className="stats-number">{dataToShow.length}</span>
-        <span className="stats-label">{showArchive ? t.archivedRegistrations : t.totalRegistrations}</span>
-      </div>
-
-      {paginatedData.length === 0 ? (
-        <div className="empty-state">{t.noRecords}</div>
-      ) : (
+      {adminView === 'dashboard' && (
         <>
-          <div className="table-wrapper admin-table-wrapper">
-            <AdminTable
-              dataToShow={paginatedData}
-              showArchive={showArchive}
-              language={language}
-              t={t}
-              receiptUrls={receiptUrls}
-              getStatusColor={getStatusColor}
-              rejectionForms={rejectionForms}
-              rejectionReasons={rejectionReasons}
-              rejectionReasonOptions={rejectionReasonOptions}
-              onApprove={handleApprove}
-              onToggleRejectionForm={toggleRejectionForm}
-              onReasonChange={handleRejectionReasonChange}
-              onOtherChange={handleOtherReasonChange}
-              onConfirmRejection={handleArchiveRecord}
-              onDeleteArchived={handleDeleteArchived}
-              onDeleteRegistration={handleDeleteRegistration}
-              isRecordIncomplete={isRecordIncomplete}
-              onSendReminder={handleSendReminder}
-              isProcessing={(id) => processingRef.current.has(id)}
-            />
+          <div className="page-header">
+            <div>
+              <h1>{t.adminTitle}</h1>
+              {session?.user?.email && <p className="admin-email">{session.user.email}</p>}
+              <p>{showArchive ? t.archivedRegistrations : t.adminSubtitle}</p>
+            </div>
+            <div className="page-actions">
+              <button type="button" className="btn-ghost" onClick={downloadExcel} disabled={dataToShow.length === 0} title={t.downloadExcel}>
+                <Download size={18} style={{ marginRight: 6 }} />
+                {t.downloadExcel}
+              </button>
+              <button type="button" className="btn-ghost" onClick={toggleArchiveView} title={showArchive ? t.activeRegistrations : t.viewArchive}>
+                <Archive size={18} style={{ marginRight: 6 }} />
+                {showArchive ? t.activeRegistrations : t.viewArchive}
+              </button>
+              <button type="button" className="btn-ghost" onClick={toggleReminderLog} title={t.reminderHistory}>
+                <Users size={18} style={{ marginRight: 6 }} />
+                {t.reminderHistory}
+              </button>
+              <button type="button" className="btn-ghost" onClick={handleLogout} title={t.logout}>
+                <LogOut size={18} style={{ marginRight: 6 }} />
+                {t.logout}
+              </button>
+            </div>
           </div>
 
-          <AdminMobileCards
-            dataToShow={paginatedData}
-            showArchive={showArchive}
-            language={language}
-            t={t}
-            getStatusColor={getStatusColor}
-            receiptUrls={receiptUrls}
-            rejectionForms={rejectionForms}
-            rejectionReasons={rejectionReasons}
-            rejectionReasonOptions={rejectionReasonOptions}
-            onApprove={handleApprove}
-            onToggleRejectionForm={toggleRejectionForm}
-            onReasonChange={handleRejectionReasonChange}
-            onOtherChange={handleOtherReasonChange}
-            onConfirmRejection={handleArchiveRecord}
-            onDeleteArchived={handleDeleteArchived}
-            onDeleteRegistration={handleDeleteRegistration}
-            isRecordIncomplete={isRecordIncomplete}
-            onSendReminder={handleSendReminder}
-            isProcessing={(id) => processingRef.current.has(id)}
-          />
+          <div className="stats-card">
+            <Users size={20} />
+            <span className="stats-number">{dataToShow.length}</span>
+            <span className="stats-label">{showArchive ? t.archivedRegistrations : t.totalRegistrations}</span>
+          </div>
+
+          {paginatedData.length === 0 ? (
+            <div className="empty-state">{t.noRecords}</div>
+          ) : (
+            <>
+              <div className="table-wrapper admin-table-wrapper">
+                <AdminTable
+                  dataToShow={paginatedData}
+                  showArchive={showArchive}
+                  language={language}
+                  t={t}
+                  receiptUrls={receiptUrls}
+                  getStatusColor={getStatusColor}
+                  rejectionForms={rejectionForms}
+                  rejectionReasons={rejectionReasons}
+                  rejectionReasonOptions={rejectionReasonOptions}
+                  onApprove={handleApprove}
+                  onToggleRejectionForm={toggleRejectionForm}
+                  onReasonChange={handleRejectionReasonChange}
+                  onOtherChange={handleOtherReasonChange}
+                  onConfirmRejection={handleArchiveRecord}
+                  onDeleteArchived={handleDeleteArchived}
+                  onDeleteRegistration={handleDeleteRegistration}
+                  isRecordIncomplete={isRecordIncomplete}
+                  onSendReminder={handleSendReminder}
+                  isProcessing={(id) => processingRef.current.has(id)}
+                />
+              </div>
+
+              <AdminMobileCards
+                dataToShow={paginatedData}
+                showArchive={showArchive}
+                language={language}
+                t={t}
+                getStatusColor={getStatusColor}
+                receiptUrls={receiptUrls}
+                rejectionForms={rejectionForms}
+                rejectionReasons={rejectionReasons}
+                rejectionReasonOptions={rejectionReasonOptions}
+                onApprove={handleApprove}
+                onToggleRejectionForm={toggleRejectionForm}
+                onReasonChange={handleRejectionReasonChange}
+                onOtherChange={handleOtherReasonChange}
+                onConfirmRejection={handleArchiveRecord}
+                onDeleteArchived={handleDeleteArchived}
+                onDeleteRegistration={handleDeleteRegistration}
+                isRecordIncomplete={isRecordIncomplete}
+                onSendReminder={handleSendReminder}
+                isProcessing={(id) => processingRef.current.has(id)}
+              />
+            </>
+          )}
+
+          {totalPages > 1 && (
+            <div className="pagination">
+              <button type="button" className="btn-secondary" onClick={() => goToPage(safeCurrentPage - 1)} disabled={safeCurrentPage === 1}>
+                {language === 'en' ? 'Previous' : 'Önceki'}
+              </button>
+              <span className="pagination-info">
+                {language === 'en' ? 'Page' : 'Sayfa'} {safeCurrentPage} / {totalPages}
+              </span>
+              <button type="button" className="btn-secondary" onClick={() => goToPage(safeCurrentPage + 1)} disabled={safeCurrentPage === totalPages}>
+                {language === 'en' ? 'Next' : 'Sonraki'}
+              </button>
+            </div>
+          )}
         </>
       )}
 
-      {totalPages > 1 && (
-        <div className="pagination">
-          <button type="button" className="btn-secondary" onClick={() => goToPage(safeCurrentPage - 1)} disabled={safeCurrentPage === 1}>
-            {language === 'en' ? 'Previous' : 'Önceki'}
-          </button>
-          <span className="pagination-info">
-            {language === 'en' ? 'Page' : 'Sayfa'} {safeCurrentPage} / {totalPages}
-          </span>
-          <button type="button" className="btn-secondary" onClick={() => goToPage(safeCurrentPage + 1)} disabled={safeCurrentPage === totalPages}>
-            {language === 'en' ? 'Next' : 'Sonraki'}
-          </button>
+      {adminView === 'reminder-history' && (
+        <div className="container admin-container" style={{ marginTop: 32 }}>
+          <div className="page-header">
+            <div>
+              <h1>{t.reminderHistory}</h1>
+              <p>{language === 'en' ? 'History of reminder emails sent to registrants' : 'Kayıtlılara gönderilen hatırlatma e-postaları geçmişi'}</p>
+            </div>
+            <div className="page-actions">
+              <button type="button" className="btn-secondary" onClick={loadReminderLogs}>
+                {language === 'en' ? 'Refresh' : 'Yenile'}
+              </button>
+              <button type="button" className="btn-secondary" onClick={() => setAdminView('dashboard')}>
+                {language === 'en' ? 'Back' : 'Geri'}
+              </button>
+            </div>
+          </div>
+
+          <div className="table-wrapper admin-table-wrapper">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>{language === 'en' ? 'Sent At' : 'Gönderim Zamanı'}</th>
+                  <th>{language === 'en' ? 'Type' : 'Tür'}</th>
+                  <th>{language === 'en' ? 'Message' : 'Mesaj'}</th>
+                  <th>{t.name}</th>
+                  <th>{t.surname}</th>
+                  <th>{t.email}</th>
+                  <th>Ref No</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reminderLogs.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: 'center', padding: 40, color: '#6b7280' }}>
+                      {language === 'en' ? 'No reminders sent yet.' : 'Henüz hatırlatma gönderilmemiş.'}
+                    </td>
+                  </tr>
+                ) : (
+                  reminderLogs.map((log, index) => (
+                    <tr key={log.id || index}>
+                      <td>{new Date(log.sent_at).toLocaleString()}</td>
+                      <td style={{ textTransform: 'capitalize' }}>{log.type}</td>
+                      <td>{log.message || '-'}</td>
+                      <td>{log.name}</td>
+                      <td>{log.surname}</td>
+                      <td>{log.email}</td>
+                      <td>{log.reference_number}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

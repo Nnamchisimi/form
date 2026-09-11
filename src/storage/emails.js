@@ -34,19 +34,38 @@ export const sendConfirmationEmail = async (registration) => {
 export const sendReminderEmail = async (registration, missingFields = [], customMessage = '', language = 'en') => {
   if (!registration?.email) return;
 
-  const missingList = missingFields.map(field => `- ${field}`).join('<br>');
-  const editLink = `${BASE_URL}?ref=${registration.reference_number}`;
   const subject = language === 'tr' ? 'Hatırlatma: Lütfen kaydınızı tamamlayın' : 'Reminder: Please complete your registration';
+  const editLink = `${BASE_URL}?ref=${registration.reference_number}`;
 
+  const missingList = missingFields.map(field => `- ${field}`).join('<br>');
+  const missingLabel = language === 'tr' ? 'Eksik alanlar:' : 'Missing fields:';
+
+  const hasCustomMessage = Boolean(customMessage && customMessage.trim());
   const greeting = language === 'tr' ? `Merhaba ${registration.name} ${registration.surname},` : `Hello ${registration.name} ${registration.surname},`;
   const intro = language === 'tr'
     ? 'Kaydınızda eksik alanlar var. Lütfen aşağıdaki bilgileri tamamlayın:'
     : 'We noticed that your registration is missing some required details. Please complete the following:';
-  const missingLabel = language === 'tr' ? 'Eksik alanlar:' : 'Missing fields:';
-  const messageLabel = language === 'tr' ? 'Mesaj:' : 'Message:';
   const linkLabel = language === 'tr'
     ? 'Kaydınızı düzenlemek için bu bağlantıya tıklayın:'
     : 'Click the link below to edit and complete your registration:';
+
+  const emailContent = hasCustomMessage
+    ? `<p>${customMessage.replace(/\n/g, '</p><p>')}</p>`
+    : `${missingFields.length > 0 ? highlightBox(`<p><strong>${missingLabel}</strong></p><p>${missingList}</p>`) : ''}`;
+
+  if (registration.id && !hasCustomMessage) {
+    try {
+      await supabase
+        .from('reminders')
+        .insert([{
+          registration_id: registration.id,
+          type: 'reminder',
+          message: missingFields.length > 0 ? missingFields.join(', ') : 'Reminder sent'
+        }]);
+    } catch (logError) {
+      console.error('Error logging reminder:', logError);
+    }
+  }
 
   try {
     console.log('Sending reminder email to:', registration.email);
@@ -57,12 +76,10 @@ export const sendReminderEmail = async (registration, missingFields = [], custom
         subject,
         html: baseEmailTemplate(subject, `
           ${eventBadge()}
-          <p style="font-size: 18px; font-weight: 600; color: #000000; margin: 0 0 12px;">${greeting}</p>
-          <p>${intro}</p>
-          ${highlightBox(`<p><strong>${missingLabel}</strong></p><p>${missingList}</p>`)}
-          ${customMessage ? highlightBox(`<p><strong>${messageLabel}</strong></p><p>${customMessage.replace(/\n/g, '<br>')}</p>`) : ''}
-          <p>${linkLabel}</p>
-          <p><a href="${editLink}" style="color: #000000; text-decoration: none; font-weight: 600;">${editLink}</a></p>
+          ${hasCustomMessage ? '' : `<p style="font-size: 18px; font-weight: 600; color: #000000; margin: 0 0 12px;">${greeting}</p>`}
+          ${hasCustomMessage ? '' : `<p>${intro}</p>`}
+          ${emailContent}
+          ${hasCustomMessage ? '' : `<p>${linkLabel}</p><p><a href="${editLink}" style="color: #000000; text-decoration: none; font-weight: 600;">${editLink}</a></p>`}
         `)
       }
     });

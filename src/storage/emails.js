@@ -120,56 +120,31 @@ export const sendMessage = async (registrationId, message, type = 'custom') => {
 };
 
 export const sendRejectionEmail = async (registration, reason) => {
-  let reminderError = null;
-  if (registration.id && reason) {
-    try {
-      const { error } = await supabase
-        .from('reminders')
-        .insert([{
-          registration_id: registration.id,
-          type: 'rejection',
-          message: reason
-        }])
-        .select()
-        .single();
-
-      reminderError = error;
-      if (error) {
-        console.error('Error inserting rejection reminder:', error);
-      }
-    } catch (reminderErr) {
-      console.error('Error inserting rejection reminder:', reminderErr);
-      reminderError = reminderErr;
-    }
+  if (!registration?.email || !reason) {
+    return;
   }
 
-  if (registration.email) {
-    try {
-      console.log('Sending rejection email to:', registration.email);
-      const { error: emailError } = await supabase.functions.invoke('rapid-service', {
-        body: {
-          to: registration.email,
-          from: EMAIL_FROM,
-          subject: 'Update on your registration',
-          html: baseEmailTemplate('Registration Update', `
-            ${eventBadge()}
-            ${highlightBox(eventInfo())}
-            <p>Your registration was not approved.</p>
-            <p><strong>Reason:</strong> ${reason}</p>
-            ${registration.reference_number ? highlightBox(`<p><strong>Reference No:</strong> ${registration.reference_number}</p>`) : ''}
-          `)
-        }
-      });
-      if (emailError) {
-        console.error('Rejection email error:', emailError);
+  try {
+    console.log('Sending rejection email to:', registration.email);
+    const { error: emailError } = await supabase.functions.invoke('rapid-service', {
+      body: {
+        to: registration.email,
+        from: EMAIL_FROM,
+        subject: 'Update on your registration',
+        html: baseEmailTemplate('Registration Update', `
+          ${eventBadge()}
+          ${highlightBox(eventInfo())}
+          <p>Your registration was not approved.</p>
+          <p><strong>Reason:</strong> ${reason}</p>
+          ${registration.reference_number ? highlightBox(`<p><strong>Reference No:</strong> ${registration.reference_number}</p>`) : ''}
+        `)
       }
-    } catch (emailError) {
-      console.error('Error sending rejection email via Edge Function:', emailError);
+    });
+    if (emailError) {
+      console.error('Rejection email error:', emailError);
     }
-  }
-
-  if (reminderError) {
-    throw reminderError;
+  } catch (emailError) {
+    console.error('Error sending rejection email via Edge Function:', emailError);
   }
 };
 

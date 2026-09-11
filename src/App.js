@@ -58,21 +58,17 @@ const App = () => {
   }, [t.bingoTitle]);
 
   useEffect(() => {
-    const checkAdminSession = async () => {
+    const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setCurrentPage('admin');
+        return;
       }
-    };
-    checkAdminSession();
-  }, []);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const ref = params.get('ref');
-    if (!ref) return;
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('ref');
+      if (!ref) return;
 
-    const loadByReference = async () => {
       try {
         const record = await storage.getRegistrationByReference(ref);
         if (!record) {
@@ -100,8 +96,7 @@ const App = () => {
         showToast(language === 'tr' ? 'Referans numarası yüklenirken hata oluştu.' : 'Error loading reference number.', 'error');
       }
     };
-
-    loadByReference();
+    init();
   }, []);
 
     const handleSubmit = async (e) => {

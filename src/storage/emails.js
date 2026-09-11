@@ -134,7 +134,6 @@ export const sendRejectionEmail = async (registration, reason) => {
         html: baseEmailTemplate('Registration Update', `
           ${eventBadge()}
           <p style="font-size: 18px; font-weight: 600; color: #000000; margin: 0 0 12px;">Hello ${registration.name} ${registration.surname},</p>
-          ${highlightBox(eventInfo())}
           <p>Your registration was not approved.</p>
           <p><strong>Reason:</strong> ${reason}</p>
           ${registration.reference_number ? highlightBox(`<p><strong>Reference No:</strong> ${registration.reference_number}</p>`) : ''}

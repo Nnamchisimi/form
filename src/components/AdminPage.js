@@ -288,12 +288,12 @@ const AdminPage = ({ language, onBack, onToast }) => {
         invitation_status: 'Rejected'
       });
       await storage.archiveRegistration(updatedRecord, reasonText);
-      await storage.deleteRegistration(record.id);
       try {
         await storage.sendRejectionEmail(updatedRecord, reasonText);
       } catch (emailError) {
         console.error('Rejection email error:', emailError);
       }
+      await storage.deleteRegistration(record.id);
       showToast(t.registrationRejectedAndArchived, 'success');
       recordsCacheRef.current.active = recordsCacheRef.current.active.filter(r => r.id !== record.id);
       setRecords(prev => prev.filter(r => r.id !== record.id));

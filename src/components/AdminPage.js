@@ -30,9 +30,6 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const itemsPerPage = 10;
   const t = translations[language];
 
-  const recordsCacheRef = useRef({ active: null, archived: null });
-  const receiptUrlCacheRef = useRef({});
-
   useEffect(() => {
     setCurrentPage(1);
   }, [showArchive, records.length, archivedRecords.length]);
@@ -69,20 +66,12 @@ const AdminPage = ({ language, onBack, onToast }) => {
   ];
 
   const loadReceiptUrls = useCallback(async (records) => {
-    const cache = receiptUrlCacheRef.current;
-    const now = Date.now();
-    const ttl = 50 * 60 * 1000;
     const entries = records
       .filter(record => record.vehicle_stub)
       .map(async (record) => {
-        const cached = cache[record.vehicle_stub];
-        if (cached && now - cached.createdAt < ttl) {
-          return [record.id, cached.url];
-        }
         try {
           const url = await storage.getReceiptUrl(record.vehicle_stub);
           if (url) {
-            cache[record.vehicle_stub] = { url, createdAt: now };
             return [record.id, url];
           }
           console.warn('Missing receipt file for record', record.id, 'path:', record.vehicle_stub);
@@ -102,13 +91,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
 
   const loadRegistrations = useCallback(async () => {
     try {
-      if (recordsCacheRef.current.active) {
-        setRecords(recordsCacheRef.current.active);
-        await loadReceiptUrls(recordsCacheRef.current.active);
-        return;
-      }
       const data = await storage.getRegistrations();
-      recordsCacheRef.current.active = data;
       setRecords(data);
       await loadReceiptUrls(data);
     } catch (error) {
@@ -120,13 +103,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
 
   const loadArchivedRegistrations = useCallback(async () => {
     try {
-      if (recordsCacheRef.current.archived) {
-        setArchivedRecords(recordsCacheRef.current.archived);
-        await loadReceiptUrls(recordsCacheRef.current.archived);
-        return;
-      }
       const data = await storage.getArchivedRegistrations();
-      recordsCacheRef.current.archived = data;
       setArchivedRecords(data);
       await loadReceiptUrls(data);
     } catch (error) {
@@ -257,9 +234,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
         console.error('Approval email error:', emailError);
       }
       showToast(t.registrationApprovedAndArchived, 'success');
-      recordsCacheRef.current.active = recordsCacheRef.current.active.filter(r => r.id !== record.id);
       setRecords(prev => prev.filter(r => r.id !== record.id));
-      recordsCacheRef.current.archived = null;
       await loadArchivedRegistrations();
       await loadRegistrations();
       handleCloseApprovalModal();
@@ -307,7 +282,6 @@ const AdminPage = ({ language, onBack, onToast }) => {
       }
       await storage.deleteRegistration(record.id);
       showToast(t.registrationRejectedAndArchived, 'success');
-      recordsCacheRef.current.active = recordsCacheRef.current.active.filter(r => r.id !== record.id);
       setRecords(prev => prev.filter(r => r.id !== record.id));
       setRejectionReasons(prev => {
         const next = { ...prev };
@@ -320,7 +294,6 @@ const AdminPage = ({ language, onBack, onToast }) => {
         delete next[record.id];
         return next;
       });
-      recordsCacheRef.current.archived = null;
       await loadArchivedRegistrations();
       await loadRegistrations();
     } catch (error) {
@@ -416,11 +389,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const handleDeleteArchived = async (record) => {
     if (!window.confirm(t.deleteConfirm)) return;
     try {
-      if (record.vehicle_stub && receiptUrlCacheRef.current[record.vehicle_stub]) {
-        delete receiptUrlCacheRef.current[record.vehicle_stub];
-      }
       await storage.deleteArchivedRegistration(record);
-      recordsCacheRef.current.archived = recordsCacheRef.current.archived.filter(r => r.id !== record.id);
       setArchivedRecords(prev => prev.filter(r => r.id !== record.id));
     } catch (error) {
       console.error('Error deleting archived registration:', error);
@@ -432,18 +401,13 @@ const AdminPage = ({ language, onBack, onToast }) => {
     if (!window.confirm(t.deleteConfirm)) return;
     try {
       if (record.vehicle_stub) {
-        if (receiptUrlCacheRef.current[record.vehicle_stub]) {
-          delete receiptUrlCacheRef.current[record.vehicle_stub];
-        }
         await supabase.storage.from('receipts').remove([record.vehicle_stub]);
       }
       await storage.deleteRegistration(record.id);
-      recordsCacheRef.current.active = recordsCacheRef.current.active.filter(r => r.id !== record.id);
       setRecords(prev => prev.filter(r => r.id !== record.id));
     } catch (error) {
       console.error('Error deleting registration:', error);
       showToast(t.errorDeletingArchived, 'error');
-      recordsCacheRef.current.active = null;
       await loadRegistrations();
     }
   };

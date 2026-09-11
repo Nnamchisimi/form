@@ -357,16 +357,16 @@ const RegistrationForm = ({ language, formData, setFormData, fileName, setFileNa
         </div>
       </div>
 
-      <div className="button-group">
-        <button
-          type="button"
-          className="btn-secondary"
-          onClick={onSaveDraft}
-          disabled={isFormComplete}
-        >
-          <Save size={16} style={{ marginRight: 6 }} />
-          {t.continueLater}
-        </button>
+       <div className="button-group">
+         <button
+           type="button"
+           className="btn-secondary"
+           onClick={onSaveDraft}
+           disabled={!formData.email?.trim()}
+         >
+           <Save size={16} style={{ marginRight: 6 }} />
+           {t.continueLater}
+         </button>
         <button type="submit" className="btn-primary" disabled={!isFormComplete}>
           <Check size={16} style={{ marginRight: 6 }} />
           {t.completeRegistration}

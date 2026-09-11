@@ -240,6 +240,10 @@ const App = () => {
   const saveDraft = async () => {
     try {
       const normalizedEmail = (formData.email || '').trim().toLowerCase();
+      if (!normalizedEmail) {
+        showToast(t.draftEmailRequired, 'warning');
+        return;
+      }
       const existingRegistration = await storage.findActiveRegistrationByEmail(normalizedEmail);
       if (existingRegistration && existingRegistration.reference_number !== editingReference) {
         showToast(t.duplicateEmailMessage, 'error');

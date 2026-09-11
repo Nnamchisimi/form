@@ -146,7 +146,7 @@ export const sendRejectionEmail = async (registration, reason) => {
   if (registration.email) {
     try {
       console.log('Sending rejection email to:', registration.email);
-      const { error: emailError } = await supabase.functions.invoke('send-email', {
+      const { error: emailError } = await supabase.functions.invoke('rapid-service', {
         body: {
           to: registration.email,
           from: EMAIL_FROM,
@@ -177,7 +177,7 @@ export const sendApprovalEmail = async (registration) => {
   if (registration.email) {
     try {
       console.log('Sending approval email to:', registration.email);
-      const { error: emailError } = await supabase.functions.invoke('send-email', {
+      const { error: emailError } = await supabase.functions.invoke('rapid-service', {
         body: {
           to: registration.email,
           from: EMAIL_FROM,

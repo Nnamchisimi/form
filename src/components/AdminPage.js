@@ -67,16 +67,19 @@ const AdminPage = ({ language, onBack, onToast }) => {
 
   const loadReceiptUrls = useCallback(async (records) => {
     const cache = receiptUrlCacheRef.current;
+    const now = Date.now();
+    const ttl = 50 * 60 * 1000;
     const entries = records
       .filter(record => record.vehicle_stub)
       .map(async (record) => {
-        if (cache[record.vehicle_stub]) {
-          return [record.id, cache[record.vehicle_stub]];
+        const cached = cache[record.vehicle_stub];
+        if (cached && now - cached.createdAt < ttl) {
+          return [record.id, cached.url];
         }
         try {
           const url = await storage.getReceiptUrl(record.vehicle_stub);
           if (url) {
-            cache[record.vehicle_stub] = url;
+            cache[record.vehicle_stub] = { url, createdAt: now };
             return [record.id, url];
           }
           console.warn('Missing receipt file for record', record.id, 'path:', record.vehicle_stub);

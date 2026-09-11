@@ -822,7 +822,58 @@ const AdminPage = ({ language, onBack, onToast }) => {
                 )}
               </div>
               <div className="approval-details">
-                <h4>{language === 'en' ? 'Rejection Details' : 'Reddetme Detayları'}</h4>
+                <h4>{language === 'en' ? 'Registration Details' : 'Kayıt Detayları'}</h4>
+                <div className="approval-details-grid">
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.name}</span>
+                    <span className="approval-detail-value">{rejectionModal.name}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.surname}</span>
+                    <span className="approval-detail-value">{rejectionModal.surname}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.email}</span>
+                    <span className="approval-detail-value">{rejectionModal.email}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.phone}</span>
+                    <span className="approval-detail-value">{rejectionModal.phone}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.dob}</span>
+                    <span className="approval-detail-value">{rejectionModal.dob}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.vehicleBrand}</span>
+                    <span className="approval-detail-value">{rejectionModal.vehicle_brand}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.vehicleModel}</span>
+                    <span className="approval-detail-value">{rejectionModal.vehicle_model}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.modelYear}</span>
+                    <span className="approval-detail-value">{rejectionModal.model_year}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.licensePlate}</span>
+                    <span className="approval-detail-value">{rejectionModal.license_plate}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.location}</span>
+                    <span className="approval-detail-value">{t.locations?.[rejectionModal.location] || rejectionModal.location}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">Ref No</span>
+                    <span className="approval-detail-value">{rejectionModal.reference_number}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.submittedAt}</span>
+                    <span className="approval-detail-value">{new Date(rejectionModal.submitted_at).toLocaleString()}</span>
+                  </div>
+                </div>
+                <h4 style={{ marginTop: 20 }}>{language === 'en' ? 'Rejection Details' : 'Reddetme Detayları'}</h4>
                 <RejectionForm
                   record={rejectionModal}
                   language={language}

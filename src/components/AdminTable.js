@@ -1,5 +1,4 @@
 import React from 'react';
-import RejectionForm from './RejectionForm';
 import { Trash } from '../icons';
 
 
@@ -10,13 +9,12 @@ const AdminTable = ({
   t,
   receiptUrls,
   getStatusColor,
-  rejectionForms,
   rejectionReasons,
   rejectionReasonOptions,
   onApprove,
+  onOpenRejectionModal,
   onDeleteArchived,
   onDeleteRegistration,
-  onToggleRejectionForm,
   onReasonChange,
   onOtherChange,
   onConfirmRejection,
@@ -97,7 +95,7 @@ const AdminTable = ({
                     <button
                       type="button"
                       className="btn-reject"
-                      onClick={() => onToggleRejectionForm(record.id)}
+                      onClick={() => onOpenRejectionModal?.(record)}
                       disabled={record.invitation_status === 'Approved' || record.invitation_status === 'Rejected' || isProcessing?.(record.id)}
                       title={t.rejectRegistration}
                     >
@@ -124,21 +122,6 @@ const AdminTable = ({
                     {t.delete}
                   </button>
                 </div>
-                {rejectionForms[record.id] && (
-                  <RejectionForm
-                    record={record}
-                    language={language}
-                    rejectionReasons={rejectionReasons}
-                    rejectionReasonOptions={rejectionReasonOptions}
-                    onReasonChange={onReasonChange}
-                    onOtherChange={onOtherChange}
-                    onConfirm={onConfirmRejection}
-                    onToggleRejectionForm={onToggleRejectionForm}
-                    getStatusColor={getStatusColor}
-                    receiptUrls={receiptUrls}
-                    t={t}
-                  />
-                )}
               </td>
             )}
           </tr>

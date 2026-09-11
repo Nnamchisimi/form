@@ -5,6 +5,7 @@ import { supabase } from '../supabaseClient';
 import translations from '../translations';
 import AdminTable from './AdminTable';
 import AdminMobileCards from './AdminMobileCards';
+import RejectionForm from './RejectionForm';
 
 const AdminPage = ({ language, onBack, onToast }) => {
   const showToast = (message, severity = 'info') => {
@@ -20,13 +21,13 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const [showArchive, setShowArchive] = useState(false);
   const [archivedRecords, setArchivedRecords] = useState([]);
   const [rejectionReasons, setRejectionReasons] = useState({});
-  const [rejectionForms, setRejectionForms] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [reminderModal, setReminderModal] = useState(null);
   const [reminderMessage, setReminderMessage] = useState('');
   const [reminderLogs, setReminderLogs] = useState([]);
   const [adminView, setAdminView] = useState('dashboard');
   const [approvalModal, setApprovalModal] = useState(null);
+  const [rejectionModal, setRejectionModal] = useState(null);
   const itemsPerPage = 10;
   const t = translations[language];
 
@@ -213,6 +214,14 @@ const AdminPage = ({ language, onBack, onToast }) => {
     setApprovalModal(null);
   };
 
+  const handleOpenRejectionModal = (record) => {
+    setRejectionModal(record);
+  };
+
+  const handleCloseRejectionModal = () => {
+    setRejectionModal(null);
+  };
+
   const handleApprove = async (record) => {
     if (record.invitation_status === 'Approved' || record.invitation_status === 'Rejected') {
       return;
@@ -289,11 +298,6 @@ const AdminPage = ({ language, onBack, onToast }) => {
         delete next[`${record.id}_other`];
         return next;
       });
-      setRejectionForms(prev => {
-        const next = { ...prev };
-        delete next[record.id];
-        return next;
-      });
       await loadArchivedRegistrations();
       await loadRegistrations();
     } catch (error) {
@@ -303,13 +307,6 @@ const AdminPage = ({ language, onBack, onToast }) => {
     } finally {
       processingRef.current.delete(record.id);
     }
-  };
-
-  const toggleRejectionForm = (recordId) => {
-    setRejectionForms(prev => ({
-      ...prev,
-      [recordId]: !prev[recordId]
-    }));
   };
 
   const handleRejectionReasonChange = (recordId, value) => {
@@ -576,11 +573,10 @@ const AdminPage = ({ language, onBack, onToast }) => {
                   t={t}
                   receiptUrls={receiptUrls}
                   getStatusColor={getStatusColor}
-                  rejectionForms={rejectionForms}
                   rejectionReasons={rejectionReasons}
                   rejectionReasonOptions={rejectionReasonOptions}
                   onApprove={handleOpenApprovalModal}
-                  onToggleRejectionForm={toggleRejectionForm}
+                  onOpenRejectionModal={handleOpenRejectionModal}
                   onReasonChange={handleRejectionReasonChange}
                   onOtherChange={handleOtherReasonChange}
                   onConfirmRejection={handleArchiveRecord}
@@ -599,11 +595,10 @@ const AdminPage = ({ language, onBack, onToast }) => {
                 t={t}
                 getStatusColor={getStatusColor}
                 receiptUrls={receiptUrls}
-                rejectionForms={rejectionForms}
                 rejectionReasons={rejectionReasons}
                 rejectionReasonOptions={rejectionReasonOptions}
-                  onApprove={handleOpenApprovalModal}
-                onToggleRejectionForm={toggleRejectionForm}
+                onApprove={handleOpenApprovalModal}
+                onOpenRejectionModal={handleOpenRejectionModal}
                 onReasonChange={handleRejectionReasonChange}
                 onOtherChange={handleOtherReasonChange}
                 onConfirmRejection={handleArchiveRecord}
@@ -794,12 +789,57 @@ const AdminPage = ({ language, onBack, onToast }) => {
               <button type="button" className="btn-secondary" onClick={handleCloseApprovalModal}>
                 {language === 'en' ? 'Cancel' : 'İptal'}
               </button>
-              <button type="button" className="btn-reject" onClick={() => { handleCloseApprovalModal(); toggleRejectionForm(approvalModal.id); }}>
-                {t.rejectRegistration}
-              </button>
               <button type="button" className="btn-approve" onClick={() => handleApprove(approvalModal)}>
                 {t.approveRegistration}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {rejectionModal && (
+        <div className="modal-overlay">
+          <div className="modal rejection-modal">
+            <div className="approval-modal-header">
+              <h3>{language === 'en' ? 'Reject Registration' : 'Kaydı Reddet'}</h3>
+              <button type="button" className="btn-ghost" onClick={handleCloseRejectionModal} title={language === 'en' ? 'Close' : 'Kapat'}>
+                {language === 'en' ? 'Close' : 'Kapat'}
+              </button>
+            </div>
+            <div className="approval-modal-body">
+              <div className="approval-document">
+                <h4>{t.receiptFile || 'Car Document File'}</h4>
+                {receiptUrls[rejectionModal.id] ? (
+                  <img
+                    src={receiptUrls[rejectionModal.id]}
+                    alt="Car document"
+                    className="approval-document-image"
+                  />
+                ) : (
+                  <div className="approval-document-placeholder">
+                    {language === 'en' ? 'No document available' : 'Belge mevcut değil'}
+                  </div>
+                )}
+              </div>
+              <div className="approval-details">
+                <h4>{language === 'en' ? 'Rejection Details' : 'Reddetme Detayları'}</h4>
+                <RejectionForm
+                  record={rejectionModal}
+                  language={language}
+                  rejectionReasons={rejectionReasons}
+                  rejectionReasonOptions={rejectionReasonOptions}
+                  onReasonChange={handleRejectionReasonChange}
+                  onOtherChange={handleOtherReasonChange}
+                  onConfirm={() => {
+                    handleArchiveRecord(rejectionModal);
+                    handleCloseRejectionModal();
+                  }}
+                  onToggleRejectionForm={handleCloseRejectionModal}
+                  getStatusColor={getStatusColor}
+                  receiptUrls={receiptUrls}
+                  t={t}
+                />
+              </div>
             </div>
           </div>
         </div>

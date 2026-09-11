@@ -53,14 +53,14 @@ export const sendReminderEmail = async (registration, missingFields = [], custom
     ? `<p>${customMessage.replace(/\n/g, '</p><p>')}</p>`
     : `${missingFields.length > 0 ? highlightBox(`<p><strong>${missingLabel}</strong></p><p>${missingList}</p>`) : ''}`;
 
-  if (registration.id && !hasCustomMessage) {
+  if (registration.id) {
     try {
       await supabase
         .from('reminders')
         .insert([{
           registration_id: registration.id,
           type: 'reminder',
-          message: missingFields.length > 0 ? missingFields.join(', ') : 'Reminder sent'
+          message: missingFields.length > 0 ? missingFields.join(', ') : (customMessage || 'Reminder sent').trim()
         }]);
     } catch (logError) {
       console.error('Error logging reminder:', logError);

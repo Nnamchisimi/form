@@ -26,6 +26,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const [reminderMessage, setReminderMessage] = useState('');
   const [reminderLogs, setReminderLogs] = useState([]);
   const [adminView, setAdminView] = useState('dashboard');
+  const [approvalModal, setApprovalModal] = useState(null);
   const itemsPerPage = 10;
   const t = translations[language];
 
@@ -227,6 +228,14 @@ const AdminPage = ({ language, onBack, onToast }) => {
     }
   };
 
+  const handleOpenApprovalModal = (record) => {
+    setApprovalModal(record);
+  };
+
+  const handleCloseApprovalModal = () => {
+    setApprovalModal(null);
+  };
+
   const handleApprove = async (record) => {
     if (record.invitation_status === 'Approved' || record.invitation_status === 'Rejected') {
       return;
@@ -253,6 +262,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
       recordsCacheRef.current.archived = null;
       await loadArchivedRegistrations();
       await loadRegistrations();
+      handleCloseApprovalModal();
     } catch (error) {
       console.error('Error approving registration:', error);
       showToast('Error approving registration', 'error');
@@ -592,7 +602,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
                   rejectionForms={rejectionForms}
                   rejectionReasons={rejectionReasons}
                   rejectionReasonOptions={rejectionReasonOptions}
-                  onApprove={handleApprove}
+                  onApprove={handleOpenApprovalModal}
                   onToggleRejectionForm={toggleRejectionForm}
                   onReasonChange={handleRejectionReasonChange}
                   onOtherChange={handleOtherReasonChange}
@@ -615,7 +625,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
                 rejectionForms={rejectionForms}
                 rejectionReasons={rejectionReasons}
                 rejectionReasonOptions={rejectionReasonOptions}
-                onApprove={handleApprove}
+                  onApprove={handleOpenApprovalModal}
                 onToggleRejectionForm={toggleRejectionForm}
                 onReasonChange={handleRejectionReasonChange}
                 onOtherChange={handleOtherReasonChange}
@@ -719,6 +729,99 @@ const AdminPage = ({ language, onBack, onToast }) => {
               </button>
               <button type="button" className="btn-primary" onClick={handleSendReminderEmail}>
                 {t.sendMessage}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {approvalModal && (
+        <div className="modal-overlay">
+          <div className="modal approval-modal">
+            <div className="approval-modal-header">
+              <h3>{language === 'en' ? 'Review Registration' : 'Kaydı İncele'}</h3>
+              <button type="button" className="btn-ghost" onClick={handleCloseApprovalModal} title={language === 'en' ? 'Close' : 'Kapat'}>
+                {language === 'en' ? 'Close' : 'Kapat'}
+              </button>
+            </div>
+            <div className="approval-modal-body">
+              <div className="approval-document">
+                <h4>{t.receiptFile || 'Car Document File'}</h4>
+                {receiptUrls[approvalModal.id] ? (
+                  <img
+                    src={receiptUrls[approvalModal.id]}
+                    alt="Car document"
+                    className="approval-document-image"
+                  />
+                ) : (
+                  <div className="approval-document-placeholder">
+                    {language === 'en' ? 'No document available' : 'Belge mevcut değil'}
+                  </div>
+                )}
+              </div>
+              <div className="approval-details">
+                <h4>{language === 'en' ? 'Registration Details' : 'Kayıt Detayları'}</h4>
+                <div className="approval-details-grid">
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.name}</span>
+                    <span className="approval-detail-value">{approvalModal.name}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.surname}</span>
+                    <span className="approval-detail-value">{approvalModal.surname}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.email}</span>
+                    <span className="approval-detail-value">{approvalModal.email}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.phone}</span>
+                    <span className="approval-detail-value">{approvalModal.phone}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.dob}</span>
+                    <span className="approval-detail-value">{approvalModal.dob}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.vehicleBrand}</span>
+                    <span className="approval-detail-value">{approvalModal.vehicle_brand}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.vehicleModel}</span>
+                    <span className="approval-detail-value">{approvalModal.vehicle_model}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.modelYear}</span>
+                    <span className="approval-detail-value">{approvalModal.model_year}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.licensePlate}</span>
+                    <span className="approval-detail-value">{approvalModal.license_plate}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.location}</span>
+                    <span className="approval-detail-value">{t.locations?.[approvalModal.location] || approvalModal.location}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">Ref No</span>
+                    <span className="approval-detail-value">{approvalModal.reference_number}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.submittedAt}</span>
+                    <span className="approval-detail-value">{new Date(approvalModal.submitted_at).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="approval-modal-footer">
+              <button type="button" className="btn-secondary" onClick={handleCloseApprovalModal}>
+                {language === 'en' ? 'Cancel' : 'İptal'}
+              </button>
+              <button type="button" className="btn-reject" onClick={() => { handleCloseApprovalModal(); toggleRejectionForm(approvalModal.id); }}>
+                {t.rejectRegistration}
+              </button>
+              <button type="button" className="btn-approve" onClick={() => handleApprove(approvalModal)}>
+                {t.approveRegistration}
               </button>
             </div>
           </div>

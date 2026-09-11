@@ -487,6 +487,19 @@ const AdminPage = ({ language, onBack, onToast }) => {
               placeholder={t.password}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  (async () => {
+                    const { error } = await supabase.auth.signInWithPassword({
+                      email,
+                      password
+                    });
+                    if (error) showToast(error.message, 'error');
+                    else checkAuth();
+                  })();
+                }
+              }}
             />
             <button type="button" className="btn-primary" onClick={async () => {
               const { error } = await supabase.auth.signInWithPassword({

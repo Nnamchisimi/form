@@ -29,6 +29,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const [approvalModal, setApprovalModal] = useState(null);
   const [rejectionModal, setRejectionModal] = useState(null);
   const [documentViewer, setDocumentViewer] = useState(null);
+  const [approvalChassis, setApprovalChassis] = useState('');
   const itemsPerPage = 10;
   const t = translations[language];
 
@@ -209,10 +210,12 @@ const AdminPage = ({ language, onBack, onToast }) => {
 
   const handleOpenApprovalModal = (record) => {
     setApprovalModal(record);
+    setApprovalChassis(record.chassis_number || '');
   };
 
   const handleCloseApprovalModal = () => {
     setApprovalModal(null);
+    setApprovalChassis('');
   };
 
   const handleOpenRejectionModal = (record) => {
@@ -240,9 +243,10 @@ const AdminPage = ({ language, onBack, onToast }) => {
     }
     processingRef.current.add(record.id);
     try {
-      const updatedRecord = { ...record, invitation_status: 'Approved' };
+      const updatedRecord = { ...record, invitation_status: 'Approved', chassis_number: approvalChassis.trim() };
       await storage.updateRegistration(record.id, {
-        invitation_status: 'Approved'
+        invitation_status: 'Approved',
+        chassis_number: approvalChassis.trim() || null
       });
       await storage.archiveRegistration(updatedRecord, 'Approved');
       await storage.deleteRegistration(record.id);
@@ -795,6 +799,19 @@ const AdminPage = ({ language, onBack, onToast }) => {
                     <span className="approval-detail-value">{new Date(approvalModal.submitted_at).toLocaleString()}</span>
                   </div>
                 </div>
+                <div className="form-group" style={{ marginTop: 16 }}>
+                  <label htmlFor="approval-chassis" style={{ fontWeight: 600, fontSize: '0.95em' }}>
+                    {t.chassisNumber}
+                  </label>
+                  <input
+                    id="approval-chassis"
+                    type="text"
+                    value={approvalChassis}
+                    onChange={(e) => setApprovalChassis(e.target.value)}
+                    placeholder={language === 'en' ? 'Enter chassis number' : 'Şasi numarası girin'}
+                    style={{ width: '100%', marginTop: 6, padding: 10, fontSize: 14, fontFamily: 'inherit' }}
+                  />
+                </div>
               </div>
             </div>
             <div className="approval-modal-footer">
@@ -871,6 +888,10 @@ const AdminPage = ({ language, onBack, onToast }) => {
                   <div className="approval-detail-item">
                     <span className="approval-detail-label">{t.licensePlate}</span>
                     <span className="approval-detail-value">{rejectionModal.license_plate}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.chassisNumber}</span>
+                    <span className="approval-detail-value">{rejectionModal.chassis_number || '-'}</span>
                   </div>
                   <div className="approval-detail-item">
                     <span className="approval-detail-label">{t.location}</span>
@@ -970,6 +991,10 @@ const AdminPage = ({ language, onBack, onToast }) => {
                   <div className="approval-detail-item">
                     <span className="approval-detail-label">{t.licensePlate}</span>
                     <span className="approval-detail-value">{documentViewer.license_plate}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.chassisNumber}</span>
+                    <span className="approval-detail-value">{documentViewer.chassis_number || '-'}</span>
                   </div>
                   <div className="approval-detail-item">
                     <span className="approval-detail-label">{t.location}</span>

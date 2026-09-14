@@ -19,6 +19,7 @@ const AdminMobileCards = ({
   onConfirmRejection,
   isRecordIncomplete,
   onSendReminder,
+  onViewDocument,
   isProcessing
 }) => {
   return (
@@ -74,7 +75,7 @@ const AdminMobileCards = ({
                 <button
                   type="button"
                   className="btn-icon"
-                  onClick={() => window.open(receiptUrls[record.id], '_blank', 'noopener,noreferrer')}
+                  onClick={() => onViewDocument?.(record)}
                   title={t.viewReceipt}
                 >
                   {t.viewReceiptButton}

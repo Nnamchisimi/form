@@ -2283,3 +2283,22 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+.document-modal {
+  max-width: 900px;
+}
+
+.document-modal .approval-modal-body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.document-modal .approval-document-image {
+  width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 10px;
+  background: #f9fafb;
+}

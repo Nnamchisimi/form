@@ -28,6 +28,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const [adminView, setAdminView] = useState('dashboard');
   const [approvalModal, setApprovalModal] = useState(null);
   const [rejectionModal, setRejectionModal] = useState(null);
+  const [documentViewer, setDocumentViewer] = useState(null);
   const itemsPerPage = 10;
   const t = translations[language];
 
@@ -222,6 +223,14 @@ const AdminPage = ({ language, onBack, onToast }) => {
     setRejectionModal(null);
   };
 
+  const handleOpenDocument = (record) => {
+    setDocumentViewer(record);
+  };
+
+  const handleCloseDocument = () => {
+    setDocumentViewer(null);
+  };
+
   const handleApprove = async (record) => {
     if (record.invitation_status === 'Approved' || record.invitation_status === 'Rejected') {
       return;
@@ -375,12 +384,13 @@ const AdminPage = ({ language, onBack, onToast }) => {
     }
   }, []);
 
-  const toggleReminderLog = async () => {
-    const newAdminView = adminView === 'dashboard' ? 'reminder-history' : 'dashboard';
-    setAdminView(newAdminView);
-    if (newAdminView === 'reminder-history' && reminderLogs.length === 0) {
-      await loadReminderLogs();
-    }
+  const openReminderHistory = async () => {
+    setAdminView('reminder-history');
+    await loadReminderLogs();
+  };
+
+  const closeReminderHistory = () => {
+    setAdminView('dashboard');
   };
 
   const handleDeleteArchived = async (record) => {
@@ -544,7 +554,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
                 <Archive size={18} style={{ marginRight: 6 }} />
                 {showArchive ? t.activeRegistrations : t.viewArchive}
               </button>
-              <button type="button" className="btn-ghost" onClick={toggleReminderLog} title={t.reminderHistory}>
+              <button type="button" className="btn-ghost" onClick={openReminderHistory} title={t.reminderHistory}>
                 <Users size={18} style={{ marginRight: 6 }} />
                 {t.reminderHistory}
               </button>
@@ -577,6 +587,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
                   rejectionReasonOptions={rejectionReasonOptions}
                   onApprove={handleOpenApprovalModal}
                   onOpenRejectionModal={handleOpenRejectionModal}
+                  onViewDocument={handleOpenDocument}
                   onReasonChange={handleRejectionReasonChange}
                   onOtherChange={handleOtherReasonChange}
                   onConfirmRejection={handleArchiveRecord}
@@ -599,6 +610,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
                 rejectionReasonOptions={rejectionReasonOptions}
                 onApprove={handleOpenApprovalModal}
                 onOpenRejectionModal={handleOpenRejectionModal}
+                onViewDocument={handleOpenDocument}
                 onReasonChange={handleRejectionReasonChange}
                 onOtherChange={handleOtherReasonChange}
                 onConfirmRejection={handleArchiveRecord}
@@ -638,7 +650,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
               <button type="button" className="btn-secondary" onClick={loadReminderLogs}>
                 {language === 'en' ? 'Refresh' : 'Yenile'}
               </button>
-              <button type="button" className="btn-secondary" onClick={() => setAdminView('dashboard')}>
+              <button type="button" className="btn-secondary" onClick={closeReminderHistory}>
                 {language === 'en' ? 'Back' : 'Geri'}
               </button>
             </div>
@@ -890,6 +902,88 @@ const AdminPage = ({ language, onBack, onToast }) => {
                   receiptUrls={receiptUrls}
                   t={t}
                 />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {documentViewer && (
+        <div className="modal-overlay">
+          <div className="modal document-modal">
+            <div className="approval-modal-header">
+              <h3>{language === 'en' ? 'Car Document' : 'Araç Belgesi'}</h3>
+              <button type="button" className="btn-ghost" onClick={handleCloseDocument} title={language === 'en' ? 'Close' : 'Kapat'}>
+                {language === 'en' ? 'Close' : 'Kapat'}
+              </button>
+            </div>
+            <div className="approval-modal-body">
+              <div className="approval-document">
+                <h4>{t.receiptFile || 'Car Document File'}</h4>
+                {receiptUrls[documentViewer.id] ? (
+                  <img
+                    src={receiptUrls[documentViewer.id]}
+                    alt="Car document"
+                    className="approval-document-image"
+                  />
+                ) : (
+                  <div className="approval-document-placeholder">
+                    {language === 'en' ? 'No document available' : 'Belge mevcut değil'}
+                  </div>
+                )}
+              </div>
+              <div className="approval-details">
+                <h4>{language === 'en' ? 'Registration Details' : 'Kayıt Detayları'}</h4>
+                <div className="approval-details-grid">
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.name}</span>
+                    <span className="approval-detail-value">{documentViewer.name}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.surname}</span>
+                    <span className="approval-detail-value">{documentViewer.surname}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.email}</span>
+                    <span className="approval-detail-value">{documentViewer.email}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.phone}</span>
+                    <span className="approval-detail-value">{documentViewer.phone}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.dob}</span>
+                    <span className="approval-detail-value">{documentViewer.dob}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.vehicleBrand}</span>
+                    <span className="approval-detail-value">{documentViewer.vehicle_brand}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.vehicleModel}</span>
+                    <span className="approval-detail-value">{documentViewer.vehicle_model}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.modelYear}</span>
+                    <span className="approval-detail-value">{documentViewer.model_year}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.licensePlate}</span>
+                    <span className="approval-detail-value">{documentViewer.license_plate}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.location}</span>
+                    <span className="approval-detail-value">{t.locations?.[documentViewer.location] || documentViewer.location}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">Ref No</span>
+                    <span className="approval-detail-value">{documentViewer.reference_number}</span>
+                  </div>
+                  <div className="approval-detail-item">
+                    <span className="approval-detail-label">{t.submittedAt}</span>
+                    <span className="approval-detail-value">{new Date(documentViewer.submitted_at).toLocaleString()}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

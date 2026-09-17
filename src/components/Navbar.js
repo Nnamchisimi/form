@@ -33,9 +33,6 @@ const Navbar = ({ language, setLanguage, currentPage, setCurrentPage }) => {
 
         <div className={`navbar-links ${mobileOpen ? 'open' : ''}`}>
           <NavLink page="form" label={t.navHome} />
-          <NavLink page="bingo" label={t.navBingo} />
-          <NavLink page="about" label={t.navAbout} />
-          <NavLink page="faq" label={t.navFaq} />
           <NavLink page="admin" label={t.navAdmin} icon={<Users size={16} />} />
         </div>
 

@@ -55,6 +55,19 @@ export const findArchivedRegistrationByEmail = async (email) => {
   return null;
 };
 
+export const markEditLinkUsed = async (referenceNumber) => {
+  if (!referenceNumber) return;
+  const { error } = await supabase
+    .from('registrations')
+    .update({ edit_link_used: true, edit_link_used_at: new Date().toISOString() })
+    .eq('reference_number', referenceNumber);
+
+  if (error) {
+    console.error('Error marking edit link as used:', error);
+    throw error;
+  }
+};
+
 export const getRegistrationByReference = async (referenceNumber) => {
   if (!referenceNumber) return null;
   const { data, error } = await supabase
@@ -92,15 +105,18 @@ export const saveRegistration = async (registration) => {
   const { data, error } = await supabase
     .from('registrations')
     .insert([registration])
-    .select()
-    .single();
+    .select();
 
   if (error) {
     console.error('Error saving registration:', error);
     throw error;
   }
 
-  return data;
+  if (!data || data.length === 0) {
+    throw new Error('No data returned after saving registration');
+  }
+
+  return data[0];
 };
 
 export const updateRegistration = async (id, updates) => {
@@ -131,6 +147,7 @@ export const archiveRegistration = async (registration, reason = 'Rejected') => 
     vehicle_model: registration.vehicle_model,
     model_year: registration.model_year,
     license_plate: registration.license_plate,
+    chassis_number: registration.chassis_number,
     vehicle_stub: registration.vehicle_stub,
     location: registration.location,
     submitted_at: registration.submitted_at,

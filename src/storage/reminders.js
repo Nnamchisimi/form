@@ -4,15 +4,18 @@ export const addReminder = async (registrationId, type) => {
   const { data, error } = await supabase
     .from('reminders')
     .insert([{ registration_id: registrationId, type }])
-    .select()
-    .single();
+    .select();
 
   if (error) {
     console.error('Error adding reminder:', error);
     throw error;
   }
 
-  return data;
+  if (!data || data.length === 0) {
+    throw new Error('No data returned after adding reminder');
+  }
+
+  return data[0];
 };
 
 export const getReminders = async (registrationId) => {

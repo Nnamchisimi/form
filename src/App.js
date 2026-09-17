@@ -4,9 +4,6 @@ import Navbar from './components/Navbar';
 import FormHeader from './components/FormHeader';
 import RegistrationForm from './components/RegistrationForm';
 import AdminPage from './components/AdminPage';
-import AboutPage from './components/AboutPage';
-import FaqPage from './components/FaqPage';
-import BingoPage from './components/BingoPage';
 import translations from './translations';
 import storage from './storage';
 import { supabase } from './supabaseClient';
@@ -21,7 +18,6 @@ const App = () => {
     email: '',
     phone: '',
     dob: '',
-    vehicleBrand: 'Mercedes-Benz',
     vehicleModel: '',
     modelYear: '',
     licensePlate: '',
@@ -73,16 +69,21 @@ const App = () => {
         const record = await storage.getRegistrationByReference(ref);
         if (!record) {
           showToast(language === 'tr' ? 'Referans numarası bulunamadı.' : 'Reference number not found.', 'error');
+          window.history.replaceState({}, '', window.location.pathname);
+          return;
+        }
+        if (record.edit_link_used) {
+          showToast(language === 'tr' ? 'Bu bağlantı zaten kullanıldı.' : 'This link has already been used.', 'error');
+          window.history.replaceState({}, '', window.location.pathname);
           return;
         }
         setEditingReference(ref);
-        setFormData({
+          setFormData({
           name: record.name || '',
           surname: record.surname || '',
           email: record.email || '',
           phone: record.phone || '',
           dob: record.dob || '',
-          vehicleBrand: record.vehicle_brand || 'Mercedes-Benz',
           vehicleModel: record.vehicle_model || '',
           modelYear: record.model_year || '',
           licensePlate: record.license_plate || '',
@@ -108,7 +109,6 @@ const App = () => {
         if (!formData.email?.trim()) missing.push('email');
         if (!formData.phone?.trim()) missing.push('phone');
         if (!formData.dob) missing.push('dob');
-        if (!formData.vehicleBrand) missing.push('vehicleBrand');
         if (!formData.vehicleModel?.trim()) missing.push('vehicleModel');
         if (!formData.modelYear) missing.push('modelYear');
         if (!formData.licensePlate?.trim()) missing.push('licensePlate');
@@ -141,7 +141,6 @@ const App = () => {
             email: formData.email,
             phone: formData.phone,
             dob: formData.dob,
-            vehicle_brand: formData.vehicleBrand,
             vehicle_model: formData.vehicleModel,
             model_year: formData.modelYear,
             license_plate: formData.licensePlate,
@@ -152,6 +151,7 @@ const App = () => {
             updatePayload.vehicle_stub = receiptPath;
           }
           const updated = await storage.updateRegistrationByReference(editingReference, updatePayload);
+          await storage.markEditLinkUsed(editingReference);
           console.log('Registration updated:', updated);
           showToast(language === 'tr' ? 'Kaydınız güncellendi.' : 'Your registration has been updated.', 'success');
           setEditingReference(null);
@@ -161,7 +161,6 @@ const App = () => {
             email: '',
             phone: '',
             dob: '',
-            vehicleBrand: 'Mercedes-Benz',
             vehicleModel: '',
             modelYear: '',
             licensePlate: '',
@@ -180,7 +179,6 @@ const App = () => {
           email: formData.email,
           phone: formData.phone,
           dob: formData.dob,
-          vehicle_brand: formData.vehicleBrand,
           vehicle_model: formData.vehicleModel,
           model_year: formData.modelYear,
           license_plate: formData.licensePlate,
@@ -190,7 +188,7 @@ const App = () => {
           receipt_status: receiptPath ? 'Submitted' : 'Pending',
           verification_status: 'Pending',
           invitation_status: 'Pending',
-          reference_number: `KOMBOS-2026-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
+          reference_number: `KOMBOS-2026-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
         };
         
         const savedSubmission = await storage.saveRegistration(submission);
@@ -216,7 +214,6 @@ const App = () => {
         email: '',
         phone: '',
         dob: '',
-        vehicleBrand: 'Mercedes-Benz',
         vehicleModel: '',
         modelYear: '',
         licensePlate: '',
@@ -256,14 +253,21 @@ const App = () => {
         email: formData.email,
         phone: formData.phone,
         dob: formData.dob,
-        vehicle_brand: formData.vehicleBrand,
         vehicle_model: formData.vehicleModel,
         model_year: formData.modelYear,
         license_plate: formData.licensePlate,
         location: formData.location,
         vehicle_stub: formData.vehicleStub
       };
+      const oldReference = editingReference;
       const saved = await storage.saveDraftRegistration(payload);
+      if (oldReference) {
+        try {
+          await storage.markEditLinkUsed(oldReference);
+        } catch (markError) {
+          console.error('Error marking old edit link as used:', markError);
+        }
+      }
       storage.saveDraft(formData);
       showToast(language === 'tr' ? 'Devam edebilirsiniz. Düzenleme bağlantısı e-posta adresinize gönderildi.' : 'You can continue later. An edit link has been sent to your email.', 'success');
       if (saved?.reference_number) {
@@ -275,7 +279,6 @@ const App = () => {
         email: '',
         phone: '',
         dob: '',
-        vehicleBrand: 'Mercedes-Benz',
         vehicleModel: '',
         modelYear: '',
         licensePlate: '',
@@ -330,26 +333,6 @@ const App = () => {
           />
         )}
 
-        {currentPage === 'about' && (
-          <AboutPage
-            language={language}
-            onBack={() => setCurrentPage('form')}
-          />
-        )}
-
-        {currentPage === 'faq' && (
-          <FaqPage
-            language={language}
-            onBack={() => setCurrentPage('form')}
-          />
-        )}
-
-        {currentPage === 'bingo' && (
-          <BingoPage
-            language={language}
-            onBack={() => setCurrentPage('form')}
-          />
-        )}
       </main>
 
       <footer className="footer">

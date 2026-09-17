@@ -69,7 +69,6 @@ const RegistrationForm = ({ language, formData, setFormData, fileName, setFileNa
     formData.email?.trim() &&
     formData.phone?.trim() &&
     formData.dob &&
-    formData.vehicleBrand &&
     formData.vehicleModel?.trim() &&
     formData.modelYear &&
     formData.licensePlate?.trim() &&
@@ -224,22 +223,6 @@ const RegistrationForm = ({ language, formData, setFormData, fileName, setFileNa
         onChange={(value) => setFormData(prev => ({ ...prev, dob: value }))}
         required
       />
-
-      <div className="form-group">
-        <label htmlFor="vehicleBrand">{t.vehicleBrand} <span className="required">*</span></label>
-        <div className="select-wrapper">
-          <select
-            id="vehicleBrand"
-            name="vehicleBrand"
-            value={formData.vehicleBrand}
-            onChange={handleChange}
-            required
-          >
-            <option value="Mercedes-Benz">Mercedes-Benz</option>
-          </select>
-          <ChevronDown className="select-icon" size={14} />
-        </div>
-      </div>
 
       <div className="form-group">
         <label htmlFor="vehicleModel">{t.vehicleModel} <span className="required">*</span></label>

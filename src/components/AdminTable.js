@@ -32,10 +32,10 @@ const AdminTable = ({
           <th>{t.email}</th>
           <th>{t.phone}</th>
           <th>{t.dob}</th>
-          <th>{t.vehicleBrand}</th>
           <th>{t.vehicleModel}</th>
           <th>{t.modelYear}</th>
           <th>{t.licensePlate}</th>
+          <th>{t.chassisNumber}</th>
           <th>{t.location}</th>
           <th>Ref No</th>
           <th>{t.submittedAt}</th>
@@ -52,10 +52,10 @@ const AdminTable = ({
             <td>{record.email}</td>
             <td>{record.phone}</td>
             <td>{record.dob}</td>
-            <td>{record.vehicle_brand || '-'}</td>
             <td>{record.vehicle_model}</td>
             <td>{record.model_year}</td>
             <td>{record.license_plate}</td>
+            <td>{record.chassis_number || '-'}</td>
           <td>{t.locations[record.location] || record.location}</td>
           <td>{record.reference_number || '-'}</td>
           <td>{new Date(record.submitted_at).toLocaleString()}</td>

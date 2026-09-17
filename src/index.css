@@ -407,6 +407,12 @@ button {
   background: #f3f4f6;
 }
 
+.btn-ghost.active {
+  background: #e5e7eb;
+  color: #000000;
+  font-weight: 600;
+}
+
 .btn-primary {
   background: #000000;
   color: #ffffff;
@@ -2207,6 +2213,9 @@ button {
 .approval-document {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
+  border-radius: 10px;
+  position: relative;
 }
 
 .approval-document h4,
@@ -2224,6 +2233,12 @@ button {
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   background: #f9fafb;
+  cursor: zoom-in;
+  transition: transform 0.3s ease;
+}
+
+.approval-document-image:hover {
+  transform: scale(1.8);
 }
 
 .approval-document-placeholder {
@@ -2301,4 +2316,14 @@ button {
   object-fit: contain;
   border-radius: 10px;
   background: #f9fafb;
+}
+
+.approval-modal .form-group input[type="text"] {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+.approval-modal .btn-ghost {
+  padding: 8px;
+  min-width: 40px;
 }

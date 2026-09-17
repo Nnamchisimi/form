@@ -46,16 +46,16 @@ const AdminMobileCards = ({
               <span className="admin-mobile-field-value">{record.dob}</span>
             </div>
             <div className="admin-mobile-field">
-              <span className="admin-mobile-field-label">{t.vehicleBrand}</span>
-              <span className="admin-mobile-field-value">{record.vehicle_brand || '-'}</span>
-            </div>
-            <div className="admin-mobile-field">
               <span className="admin-mobile-field-label">{t.vehicleModel}</span>
               <span className="admin-mobile-field-value">{record.vehicle_model} ({record.model_year})</span>
             </div>
             <div className="admin-mobile-field">
               <span className="admin-mobile-field-label">{t.licensePlate}</span>
               <span className="admin-mobile-field-value">{record.license_plate}</span>
+            </div>
+            <div className="admin-mobile-field">
+              <span className="admin-mobile-field-label">{t.chassisNumber}</span>
+              <span className="admin-mobile-field-value">{record.chassis_number || '-'}</span>
             </div>
             <div className="admin-mobile-field">
               <span className="admin-mobile-field-label">{t.location}</span>

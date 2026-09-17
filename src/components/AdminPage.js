@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Download, Users, ArrowLeft, Archive, LogOut, Login } from '../icons';
+import { Download, Users, ArrowLeft, Archive, LogOut, Login, Edit } from '../icons';
 import storage from '../storage';
 import { supabase } from '../supabaseClient';
 import translations from '../translations';
@@ -30,6 +30,9 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const [rejectionModal, setRejectionModal] = useState(null);
   const [documentViewer, setDocumentViewer] = useState(null);
   const [approvalChassis, setApprovalChassis] = useState('');
+  const [approvalMessage, setApprovalMessage] = useState('');
+  const [confirmApproval, setConfirmApproval] = useState(false);
+  const [imageTransformOrigin, setImageTransformOrigin] = useState('center center');
   const itemsPerPage = 10;
   const t = translations[language];
 
@@ -155,7 +158,6 @@ const AdminPage = ({ language, onBack, onToast }) => {
     if (!record.email?.trim()) missing.push('email');
     if (!record.phone?.trim()) missing.push('phone');
     if (!record.dob) missing.push('dob');
-    if (!record.vehicle_brand) missing.push('vehicleBrand');
     if (!record.vehicle_model?.trim()) missing.push('vehicleModel');
     if (!record.model_year) missing.push('modelYear');
     if (!record.license_plate?.trim()) missing.push('licensePlate');
@@ -172,7 +174,6 @@ const AdminPage = ({ language, onBack, onToast }) => {
     if (!record.email?.trim()) missing.push(language === 'tr' ? 'E-posta' : 'Email');
     if (!record.phone?.trim()) missing.push(language === 'tr' ? 'Telefon Numarası' : 'Phone Number');
     if (!record.dob) missing.push(language === 'tr' ? 'Doğum Tarihi' : 'Date of Birth');
-    if (!record.vehicle_brand) missing.push(language === 'tr' ? 'Araç Markası' : 'Vehicle Brand');
     if (!record.vehicle_model?.trim()) missing.push(language === 'tr' ? 'Araç Modeli' : 'Vehicle Model');
     if (!record.model_year) missing.push(language === 'tr' ? 'Model Yılı' : 'Model Year');
     if (!record.license_plate?.trim()) missing.push(language === 'tr' ? 'Plaka' : 'License Plate');
@@ -211,11 +212,15 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const handleOpenApprovalModal = (record) => {
     setApprovalModal(record);
     setApprovalChassis(record.chassis_number || '');
+    setApprovalMessage('');
+    setConfirmApproval(false);
   };
 
   const handleCloseApprovalModal = () => {
     setApprovalModal(null);
     setApprovalChassis('');
+    setApprovalMessage('');
+    setConfirmApproval(false);
   };
 
   const handleOpenRejectionModal = (record) => {
@@ -241,6 +246,10 @@ const AdminPage = ({ language, onBack, onToast }) => {
     if (processingRef.current.has(record.id)) {
       return;
     }
+    if (!approvalChassis.trim()) {
+      showToast(language === 'tr' ? 'Lütfen şasi numarası girin.' : 'Please enter the chassis number.', 'warning');
+      return;
+    }
     processingRef.current.add(record.id);
     try {
       const updatedRecord = { ...record, invitation_status: 'Approved', chassis_number: approvalChassis.trim() };
@@ -251,7 +260,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
       await storage.archiveRegistration(updatedRecord, 'Approved');
       await storage.deleteRegistration(record.id);
       try {
-        await storage.sendApprovalEmail(updatedRecord);
+        await storage.sendApprovalEmail(updatedRecord, approvalMessage.trim() || undefined);
       } catch (emailError) {
         console.error('Approval email error:', emailError);
       }
@@ -346,6 +355,17 @@ const AdminPage = ({ language, onBack, onToast }) => {
     }
   };
 
+  const handleImageMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setImageTransformOrigin(`${x}% ${y}%`);
+  };
+
+  const handleImageMouseLeave = () => {
+    setImageTransformOrigin('center center');
+  };
+
   const loadReminderLogs = useCallback(async () => {
     try {
       const { data, error } = await supabase
@@ -426,17 +446,17 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const downloadExcel = () => {
     const dataToExport = showArchive ? archivedRecords : records;
     if (dataToExport.length === 0) return;
-    const headers = ['Name', 'Surname', 'Email', 'Phone', 'DOB', 'Vehicle Brand', 'Vehicle Model', 'Model Year', 'License Plate', 'Location', 'Reference No', 'Submitted At', 'Invitation Status'];
+    const headers = ['Name', 'Surname', 'Email', 'Phone', 'DOB', 'Vehicle Model', 'Model Year', 'License Plate', 'Chassis Number', 'Location', 'Reference No', 'Submitted At', 'Invitation Status'];
     const rows = dataToExport.map(r => [
       r.name,
       r.surname,
       r.email,
       r.phone,
       r.dob,
-      r.vehicle_brand,
       r.vehicle_model,
       r.model_year,
       r.license_plate,
+      r.chassis_number || '',
       r.location,
       r.reference_number || '',
       r.submitted_at,
@@ -550,15 +570,40 @@ const AdminPage = ({ language, onBack, onToast }) => {
               <p>{showArchive ? t.archivedRegistrations : t.adminSubtitle}</p>
             </div>
             <div className="page-actions">
-              <button type="button" className="btn-ghost" onClick={downloadExcel} disabled={dataToShow.length === 0} title={t.downloadExcel}>
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={downloadExcel}
+                disabled={dataToShow.length === 0}
+                title={t.downloadExcel}
+              >
                 <Download size={18} style={{ marginRight: 6 }} />
                 {t.downloadExcel}
               </button>
-              <button type="button" className="btn-ghost" onClick={toggleArchiveView} title={showArchive ? t.activeRegistrations : t.viewArchive}>
-                <Archive size={18} style={{ marginRight: 6 }} />
-                {showArchive ? t.activeRegistrations : t.viewArchive}
+              <button
+                type="button"
+                className={`btn-ghost ${!showArchive ? 'active' : ''}`}
+                onClick={() => { if (showArchive) toggleArchiveView(); }}
+                title={t.activeRegistrations}
+              >
+                <Users size={18} style={{ marginRight: 6 }} />
+                {t.activeRegistrations}
               </button>
-              <button type="button" className="btn-ghost" onClick={openReminderHistory} title={t.reminderHistory}>
+              <button
+                type="button"
+                className={`btn-ghost ${showArchive ? 'active' : ''}`}
+                onClick={() => { if (!showArchive) toggleArchiveView(); }}
+                title={t.archivedRegistrations}
+              >
+                <Archive size={18} style={{ marginRight: 6 }} />
+                {t.archivedRegistrations}
+              </button>
+              <button
+                type="button"
+                className={`btn-ghost ${adminView === 'reminder-history' ? 'active' : ''}`}
+                onClick={openReminderHistory}
+                title={t.reminderHistory}
+              >
                 <Users size={18} style={{ marginRight: 6 }} />
                 {t.reminderHistory}
               </button>
@@ -740,6 +785,9 @@ const AdminPage = ({ language, onBack, onToast }) => {
                     src={receiptUrls[approvalModal.id]}
                     alt="Car document"
                     className="approval-document-image"
+                    style={{ transformOrigin: imageTransformOrigin }}
+                    onMouseMove={handleImageMouseMove}
+                    onMouseLeave={handleImageMouseLeave}
                   />
                 ) : (
                   <div className="approval-document-placeholder">
@@ -771,10 +819,6 @@ const AdminPage = ({ language, onBack, onToast }) => {
                     <span className="approval-detail-value">{approvalModal.dob}</span>
                   </div>
                   <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.vehicleBrand}</span>
-                    <span className="approval-detail-value">{approvalModal.vehicle_brand}</span>
-                  </div>
-                  <div className="approval-detail-item">
                     <span className="approval-detail-label">{t.vehicleModel}</span>
                     <span className="approval-detail-value">{approvalModal.vehicle_model}</span>
                   </div>
@@ -799,28 +843,75 @@ const AdminPage = ({ language, onBack, onToast }) => {
                     <span className="approval-detail-value">{new Date(approvalModal.submitted_at).toLocaleString()}</span>
                   </div>
                 </div>
-                <div className="form-group" style={{ marginTop: 16 }}>
-                  <label htmlFor="approval-chassis" style={{ fontWeight: 600, fontSize: '0.95em' }}>
-                    {t.chassisNumber}
-                  </label>
-                  <input
-                    id="approval-chassis"
-                    type="text"
-                    value={approvalChassis}
-                    onChange={(e) => setApprovalChassis(e.target.value)}
-                    placeholder={language === 'en' ? 'Enter chassis number' : 'Şasi numarası girin'}
-                    style={{ width: '100%', marginTop: 6, padding: 10, fontSize: 14, fontFamily: 'inherit' }}
-                  />
-                </div>
+                 <div className="form-group" style={{ marginTop: 16 }}>
+                   <label htmlFor="approval-chassis" style={{ fontWeight: 600, fontSize: '0.95em' }}>
+                     {t.chassisNumber}
+                   </label>
+                   <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                     <input
+                       id="approval-chassis"
+                       type="text"
+                       value={approvalChassis}
+                       onChange={(e) => setApprovalChassis(e.target.value)}
+                       onKeyDown={(e) => {
+                         if (e.key === 'Enter') {
+                           e.preventDefault();
+                           handleApprove(approvalModal);
+                         }
+                       }}
+                       placeholder={language === 'en' ? 'Enter chassis number' : 'Şasi numarası girin'}
+                       style={{ flex: 1, padding: 10, fontSize: 14, fontFamily: 'inherit' }}
+                     />
+                     <button
+                       type="button"
+                       className="btn-ghost"
+                       onClick={() => setConfirmApproval(true)}
+                       title={language === 'en' ? 'Approve with chassis number' : 'Şasi numarasıyla onayla'}
+                     >
+                       <Edit size={18} />
+                     </button>
+                   </div>
+                 </div>
+                 <div className="form-group" style={{ marginTop: 16 }}>
+                   <label htmlFor="approval-message" style={{ fontWeight: 600, fontSize: '0.95em' }}>
+                     {language === 'en' ? 'Approval Message (optional)' : 'Onay Mesajı (isteğe bağlı)'}
+                   </label>
+                   <textarea
+                     id="approval-message"
+                     value={approvalMessage}
+                     onChange={(e) => setApprovalMessage(e.target.value)}
+                     rows={5}
+                     placeholder={language === 'en' ? 'Enter a custom message to include in the approval email...' : 'Onay e-postasına eklenecek özel mesajı girin...'}
+                     style={{ width: '100%', marginTop: 8, padding: 12, fontSize: 14, fontFamily: 'inherit', resize: 'vertical' }}
+                   />
+                 </div>
               </div>
             </div>
+            {confirmApproval && (
+              <div style={{ marginTop: 16, padding: 12, background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, color: '#92400e', fontWeight: 600 }}>
+                {t.confirmApproval}
+              </div>
+            )}
             <div className="approval-modal-footer">
-              <button type="button" className="btn-secondary" onClick={handleCloseApprovalModal}>
-                {language === 'en' ? 'Cancel' : 'İptal'}
-              </button>
-              <button type="button" className="btn-approve" onClick={() => handleApprove(approvalModal)}>
-                {t.approveRegistration}
-              </button>
+              {!confirmApproval ? (
+                <>
+                  <button type="button" className="btn-secondary" onClick={handleCloseApprovalModal}>
+                    {language === 'en' ? 'Cancel' : 'İptal'}
+                  </button>
+                  <button type="button" className="btn-approve" onClick={() => setConfirmApproval(true)}>
+                    {t.approveRegistration}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button type="button" className="btn-secondary" onClick={() => setConfirmApproval(false)}>
+                    {t.confirmApprovalNo}
+                  </button>
+                  <button type="button" className="btn-approve" onClick={() => handleApprove(approvalModal)}>
+                    {t.confirmApprovalYes}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -843,6 +934,9 @@ const AdminPage = ({ language, onBack, onToast }) => {
                     src={receiptUrls[rejectionModal.id]}
                     alt="Car document"
                     className="approval-document-image"
+                    style={{ transformOrigin: imageTransformOrigin }}
+                    onMouseMove={handleImageMouseMove}
+                    onMouseLeave={handleImageMouseLeave}
                   />
                 ) : (
                   <div className="approval-document-placeholder">
@@ -872,10 +966,6 @@ const AdminPage = ({ language, onBack, onToast }) => {
                   <div className="approval-detail-item">
                     <span className="approval-detail-label">{t.dob}</span>
                     <span className="approval-detail-value">{rejectionModal.dob}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.vehicleBrand}</span>
-                    <span className="approval-detail-value">{rejectionModal.vehicle_brand}</span>
                   </div>
                   <div className="approval-detail-item">
                     <span className="approval-detail-label">{t.vehicleModel}</span>
@@ -946,6 +1036,9 @@ const AdminPage = ({ language, onBack, onToast }) => {
                     src={receiptUrls[documentViewer.id]}
                     alt="Car document"
                     className="approval-document-image"
+                    style={{ transformOrigin: imageTransformOrigin }}
+                    onMouseMove={handleImageMouseMove}
+                    onMouseLeave={handleImageMouseLeave}
                   />
                 ) : (
                   <div className="approval-document-placeholder">
@@ -975,10 +1068,6 @@ const AdminPage = ({ language, onBack, onToast }) => {
                   <div className="approval-detail-item">
                     <span className="approval-detail-label">{t.dob}</span>
                     <span className="approval-detail-value">{documentViewer.dob}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.vehicleBrand}</span>
-                    <span className="approval-detail-value">{documentViewer.vehicle_brand}</span>
                   </div>
                   <div className="approval-detail-item">
                     <span className="approval-detail-label">{t.vehicleModel}</span>

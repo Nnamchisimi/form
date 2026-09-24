@@ -22,7 +22,7 @@ export const getReceiptUrl = async (path) => {
   try {
     const { data, error } = await supabase.storage
       .from('receipts')
-      .createSignedUrl(fileName, 3600); // 1 hour expiry
+      .createSignedUrl(fileName, 3600);
 
     if (error) {
       console.error('Error creating signed URL for', path, ':', error);
@@ -33,6 +33,41 @@ export const getReceiptUrl = async (path) => {
     return data?.signedUrl || null;
   } catch (error) {
     console.error('Error creating signed URL for', path, ':', error);
+    return null;
+  }
+};
+
+export const uploadTicketImage = async (blob, fileName) => {
+  const { error } = await supabase.storage
+    .from('receipts')
+    .upload(`tickets/${fileName}`, blob, {
+      contentType: 'image/png',
+      cacheControl: 'public,max-age=31536000',
+    });
+
+  if (error) {
+    console.error('Error uploading ticket image:', error);
+    throw error;
+  }
+
+  return `tickets/${fileName}`;
+};
+
+export const getTicketImageUrl = async (path) => {
+  if (!path) return null;
+  try {
+    const { data, error } = await supabase.storage
+      .from('receipts')
+      .createSignedUrl(path, 604800);
+
+    if (error) {
+      console.error('Error creating signed URL for ticket image', path, ':', error);
+      return null;
+    }
+
+    return data?.signedUrl || null;
+  } catch (error) {
+    console.error('Error creating signed URL for ticket image', path, ':', error);
     return null;
   }
 };

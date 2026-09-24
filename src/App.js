@@ -10,7 +10,7 @@ import { supabase } from './supabaseClient';
 import Toast from './components/Toast';
 
 const App = () => {
-  const [language, setLanguage] = useState('en');
+  const [language, setLanguage] = useState('tr');
   const [currentPage, setCurrentPage] = useState('form');
   const [formData, setFormData] = useState({
     name: '',
@@ -194,7 +194,7 @@ const App = () => {
         const savedSubmission = await storage.saveRegistration(submission);
         console.log('Registration saved successfully:', savedSubmission);
         try {
-          await storage.sendConfirmationEmail(savedSubmission);
+          await storage.sendConfirmationEmail(savedSubmission, language);
           console.log('Confirmation email sent');
         } catch (emailError) {
           console.error('Confirmation email failed (registration still saved):', emailError);

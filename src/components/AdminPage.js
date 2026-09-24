@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Download, Users, ArrowLeft, Archive, LogOut, Login, Edit } from '../icons';
+import { Download, Users, Archive, LogOut, Login, Edit } from '../icons';
 import storage from '../storage';
 import { supabase } from '../supabaseClient';
 import translations from '../translations';
-import AdminTable from './AdminTable';
-import AdminMobileCards from './AdminMobileCards';
-import RejectionForm from './RejectionForm';
+import AdminDashboard from './AdminDashboard';
+import AdminModals from './AdminModals';
+import AdminLoading from './AdminLoading';
+import AdminLogin from './AdminLogin';
+import Ticket from './Ticket';
+import ticketImage from '../ticketimg.jpg';
+import html2canvas from 'html2canvas';
 
 const AdminPage = ({ language, onBack, onToast }) => {
   const showToast = (message, severity = 'info') => {
@@ -16,12 +20,10 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const [loading, setLoading] = useState(true);
   const processingRef = useRef(new Set());
   const [receiptUrls, setReceiptUrls] = useState({});
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showArchive, setShowArchive] = useState(false);
   const [archivedRecords, setArchivedRecords] = useState([]);
   const [rejectionReasons, setRejectionReasons] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
+  const [showArchive, setShowArchive] = useState(false);
   const [reminderModal, setReminderModal] = useState(null);
   const [reminderMessage, setReminderMessage] = useState('');
   const [reminderLogs, setReminderLogs] = useState([]);
@@ -33,8 +35,14 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const [approvalMessage, setApprovalMessage] = useState('');
   const [confirmApproval, setConfirmApproval] = useState(false);
   const [imageTransformOrigin, setImageTransformOrigin] = useState('center center');
+  const ticketCaptureRef = useRef(null);
+  const [ticketImageUrl, setTicketImageUrl] = useState(null);
   const itemsPerPage = 10;
   const t = translations[language];
+  const rejectionReasonOptions = [
+    { value: 'invalid_details', en: 'Invalid/incorrect details', tr: 'Geçersiz/yanlış detaylar' },
+    { value: 'other', en: 'Other', tr: 'Diğer' }
+  ];
 
   useEffect(() => {
     setCurrentPage(1);
@@ -65,11 +73,6 @@ const AdminPage = ({ language, onBack, onToast }) => {
       events.forEach((event) => window.removeEventListener(event, resetTimer));
     };
   }, [session]);
-
-  const rejectionReasonOptions = [
-    { value: 'invalid_details', en: 'Invalid/incorrect details', tr: 'Geçersiz/yanlış detaylar' },
-    { value: 'other', en: 'Other', tr: 'Diğer' }
-  ];
 
   const loadReceiptUrls = useCallback(async (records) => {
     const entries = records
@@ -252,6 +255,27 @@ const AdminPage = ({ language, onBack, onToast }) => {
     }
     processingRef.current.add(record.id);
     try {
+      let generatedTicketUrl = null;
+      if (ticketCaptureRef.current) {
+        const ticketElement = ticketCaptureRef.current.querySelector('.ticket');
+        if (ticketElement) {
+          try {
+            const canvas = await html2canvas(ticketElement, {
+              useCORS: true,
+              backgroundColor: null,
+              scale: 2,
+              logging: false,
+            });
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            const fileName = `${record.reference_number || 'ticket'}-${Date.now()}.png`;
+            const path = await storage.uploadTicketImage(blob, fileName);
+            generatedTicketUrl = await storage.getTicketImageUrl(path);
+          } catch (imageError) {
+            console.error('Error generating ticket image:', imageError);
+          }
+        }
+      }
+
       const updatedRecord = { ...record, invitation_status: 'Approved', chassis_number: approvalChassis.trim() };
       await storage.updateRegistration(record.id, {
         invitation_status: 'Approved',
@@ -260,12 +284,13 @@ const AdminPage = ({ language, onBack, onToast }) => {
       await storage.archiveRegistration(updatedRecord, 'Approved');
       await storage.deleteRegistration(record.id);
       try {
-        await storage.sendApprovalEmail(updatedRecord, approvalMessage.trim() || undefined);
+        await storage.sendApprovalEmail(updatedRecord, approvalMessage.trim() || undefined, language, generatedTicketUrl);
       } catch (emailError) {
         console.error('Approval email error:', emailError);
       }
       showToast(t.registrationApprovedAndArchived, 'success');
       setRecords(prev => prev.filter(r => r.id !== record.id));
+      setTicketImageUrl(null);
       await loadArchivedRegistrations();
       await loadRegistrations();
       handleCloseApprovalModal();
@@ -307,7 +332,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
       });
       await storage.archiveRegistration(updatedRecord, reasonText);
       try {
-        await storage.sendRejectionEmail(updatedRecord, reasonText);
+        await storage.sendRejectionEmail(updatedRecord, reasonText, language);
       } catch (emailError) {
         console.error('Rejection email error:', emailError);
       }
@@ -348,22 +373,12 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const toggleArchiveView = async () => {
     const newShowArchive = !showArchive;
     setShowArchive(newShowArchive);
+    setCurrentPage(1);
     if (newShowArchive) {
       await loadArchivedRegistrations();
     } else {
       await loadRegistrations();
     }
-  };
-
-  const handleImageMouseMove = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    setImageTransformOrigin(`${x}% ${y}%`);
-  };
-
-  const handleImageMouseLeave = () => {
-    setImageTransformOrigin('center center');
   };
 
   const loadReminderLogs = useCallback(async () => {
@@ -463,7 +478,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
       r.invitation_status || 'Pending'
     ]);
     const table = `<table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${String(cell ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
-    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Registrations</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>${table}</body></html>`;
+    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:Worksheets><x:ExcelWorksheet><x:Name>Registrations</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:Worksheets></x:ExcelWorkbook></xml><![endif]--></head><body>${table}</body></html>`;
     const blob = new Blob(['\ufeff' + html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -478,73 +493,28 @@ const AdminPage = ({ language, onBack, onToast }) => {
     setSession(null);
   };
 
+  const handleImageMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setImageTransformOrigin(`${x}% ${y}%`);
+  };
+
+  const handleImageMouseLeave = () => {
+    setImageTransformOrigin('center center');
+  };
+
   if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-content">
-          <div className="loading-spinner">
-            <div className="spinner-ring"></div>
-            <div className="spinner-ring"></div>
-            <div className="spinner-ring"></div>
-          </div>
-          <h1 className="loading-title">Serhan Kombos Otomotiv</h1>
-          <p className="loading-subtitle">{language === 'en' ? 'Loading your dashboard...' : 'Yönetim paneli yükleniyor...'}</p>
-        </div>
-      </div>
-    );
+    return <AdminLoading language={language} />;
   }
 
   if (!session) {
     return (
-      <div className="container">
-        <div className="page-header">
-          <div>
-            <h1>{t.adminTitle}</h1>
-          </div>
-          <div className="page-actions">
-          </div>
-        </div>
-        <div className="admin-login">
-          <h2>{t.adminLogin}</h2>
-          <div className="admin-login-form">
-            <input
-              type="email"
-              placeholder={t.email}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <input
-              type="password"
-              placeholder={t.password}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  (async () => {
-                    const { error } = await supabase.auth.signInWithPassword({
-                      email,
-                      password
-                    });
-                    if (error) showToast(error.message, 'error');
-                    else checkAuth();
-                  })();
-                }
-              }}
-            />
-            <button type="button" className="btn-primary" onClick={async () => {
-              const { error } = await supabase.auth.signInWithPassword({
-                email: email,
-                password: password
-              });
-              if (error) showToast(error.message, 'error');
-              else checkAuth();
-            }}>
-              <Login size={20} />
-            </button>
-          </div>
-        </div>
-      </div>
+      <AdminLogin
+        language={language}
+        onToast={showToast}
+        checkAuth={checkAuth}
+      />
     );
   }
 
@@ -561,548 +531,86 @@ const AdminPage = ({ language, onBack, onToast }) => {
 
   return (
     <div className="container admin-container">
-      {adminView === 'dashboard' && (
-        <>
-          <div className="page-header">
-            <div>
-              <h1>{t.adminTitle}</h1>
-              {session?.user?.email && <p className="admin-email">{session.user.email}</p>}
-              <p>{showArchive ? t.archivedRegistrations : t.adminSubtitle}</p>
-            </div>
-            <div className="page-actions">
-              <button
-                type="button"
-                className="btn-ghost"
-                onClick={downloadExcel}
-                disabled={dataToShow.length === 0}
-                title={t.downloadExcel}
-              >
-                <Download size={18} style={{ marginRight: 6 }} />
-                {t.downloadExcel}
-              </button>
-              <button
-                type="button"
-                className={`btn-ghost ${!showArchive ? 'active' : ''}`}
-                onClick={() => { if (showArchive) toggleArchiveView(); }}
-                title={t.activeRegistrations}
-              >
-                <Users size={18} style={{ marginRight: 6 }} />
-                {t.activeRegistrations}
-              </button>
-              <button
-                type="button"
-                className={`btn-ghost ${showArchive ? 'active' : ''}`}
-                onClick={() => { if (!showArchive) toggleArchiveView(); }}
-                title={t.archivedRegistrations}
-              >
-                <Archive size={18} style={{ marginRight: 6 }} />
-                {t.archivedRegistrations}
-              </button>
-              <button
-                type="button"
-                className={`btn-ghost ${adminView === 'reminder-history' ? 'active' : ''}`}
-                onClick={openReminderHistory}
-                title={t.reminderHistory}
-              >
-                <Users size={18} style={{ marginRight: 6 }} />
-                {t.reminderHistory}
-              </button>
-              <button type="button" className="btn-ghost" onClick={handleLogout} title={t.logout}>
-                <LogOut size={18} style={{ marginRight: 6 }} />
-                {t.logout}
-              </button>
-            </div>
-          </div>
+      <AdminDashboard
+        dataToShow={paginatedData}
+        showArchive={showArchive}
+        language={language}
+        t={t}
+        receiptUrls={receiptUrls}
+        getStatusColor={getStatusColor}
+        rejectionReasons={rejectionReasons}
+        rejectionReasonOptions={rejectionReasonOptions}
+        onApprove={handleOpenApprovalModal}
+        onOpenRejectionModal={handleOpenRejectionModal}
+        onViewDocument={handleOpenDocument}
+        onReasonChange={handleRejectionReasonChange}
+        onOtherChange={handleOtherReasonChange}
+        onConfirmRejection={handleArchiveRecord}
+        onDeleteArchived={handleDeleteArchived}
+        onDeleteRegistration={handleDeleteRegistration}
+        isRecordIncomplete={isRecordIncomplete}
+        onSendReminder={handleSendReminder}
+        isProcessing={(id) => processingRef.current.has(id)}
+        currentPage={safeCurrentPage}
+        totalPages={totalPages}
+        goToPage={goToPage}
+        adminView={adminView}
+        openReminderHistory={openReminderHistory}
+        closeReminderHistory={closeReminderHistory}
+        loadReminderLogs={loadReminderLogs}
+        reminderLogs={reminderLogs}
+        downloadExcel={downloadExcel}
+        toggleArchiveView={toggleArchiveView}
+        handleLogout={handleLogout}
+        sessionUserEmail={session?.user?.email}
+      />
 
-          <div className="stats-card">
-            <Users size={20} />
-            <span className="stats-number">{dataToShow.length}</span>
-            <span className="stats-label">{showArchive ? t.archivedRegistrations : t.totalRegistrations}</span>
-          </div>
+      <AdminModals
+        approvalModal={approvalModal}
+        rejectionModal={rejectionModal}
+        documentViewer={documentViewer}
+        reminderModal={reminderModal}
+        setReminderModal={setReminderModal}
+        approvalChassis={approvalChassis}
+        setApprovalChassis={setApprovalChassis}
+        approvalMessage={approvalMessage}
+        setApprovalMessage={setApprovalMessage}
+        confirmApproval={confirmApproval}
+        setConfirmApproval={setConfirmApproval}
+        reminderMessage={reminderMessage}
+        setReminderMessage={setReminderMessage}
+        receiptUrls={receiptUrls}
+        language={language}
+        t={t}
+        getStatusColor={getStatusColor}
+        rejectionReasons={rejectionReasons}
+        rejectionReasonOptions={rejectionReasonOptions}
+        onCloseApprovalModal={handleCloseApprovalModal}
+        onCloseRejectionModal={handleCloseRejectionModal}
+        onCloseDocument={handleCloseDocument}
+        onApprove={handleApprove}
+        onArchiveRecord={handleArchiveRecord}
+        onReasonChange={handleRejectionReasonChange}
+        onOtherChange={handleOtherReasonChange}
+        onSendReminderEmail={handleSendReminderEmail}
+        imageTransformOrigin={imageTransformOrigin}
+        handleImageMouseMove={handleImageMouseMove}
+        handleImageMouseLeave={handleImageMouseLeave}
+      />
 
-          {paginatedData.length === 0 ? (
-            <div className="empty-state">{t.noRecords}</div>
-          ) : (
-            <>
-              <div className="table-wrapper admin-table-wrapper">
-                <AdminTable
-                  dataToShow={paginatedData}
-                  showArchive={showArchive}
-                  language={language}
-                  t={t}
-                  receiptUrls={receiptUrls}
-                  getStatusColor={getStatusColor}
-                  rejectionReasons={rejectionReasons}
-                  rejectionReasonOptions={rejectionReasonOptions}
-                  onApprove={handleOpenApprovalModal}
-                  onOpenRejectionModal={handleOpenRejectionModal}
-                  onViewDocument={handleOpenDocument}
-                  onReasonChange={handleRejectionReasonChange}
-                  onOtherChange={handleOtherReasonChange}
-                  onConfirmRejection={handleArchiveRecord}
-                  onDeleteArchived={handleDeleteArchived}
-                  onDeleteRegistration={handleDeleteRegistration}
-                  isRecordIncomplete={isRecordIncomplete}
-                  onSendReminder={handleSendReminder}
-                  isProcessing={(id) => processingRef.current.has(id)}
-                />
-              </div>
-
-              <AdminMobileCards
-                dataToShow={paginatedData}
-                showArchive={showArchive}
-                language={language}
-                t={t}
-                getStatusColor={getStatusColor}
-                receiptUrls={receiptUrls}
-                rejectionReasons={rejectionReasons}
-                rejectionReasonOptions={rejectionReasonOptions}
-                onApprove={handleOpenApprovalModal}
-                onOpenRejectionModal={handleOpenRejectionModal}
-                onViewDocument={handleOpenDocument}
-                onReasonChange={handleRejectionReasonChange}
-                onOtherChange={handleOtherReasonChange}
-                onConfirmRejection={handleArchiveRecord}
-                onDeleteArchived={handleDeleteArchived}
-                onDeleteRegistration={handleDeleteRegistration}
-                isRecordIncomplete={isRecordIncomplete}
-                onSendReminder={handleSendReminder}
-                isProcessing={(id) => processingRef.current.has(id)}
-              />
-            </>
-          )}
-
-          {totalPages > 1 && (
-            <div className="pagination">
-              <button type="button" className="btn-secondary" onClick={() => goToPage(safeCurrentPage - 1)} disabled={safeCurrentPage === 1}>
-                {language === 'en' ? 'Previous' : 'Önceki'}
-              </button>
-              <span className="pagination-info">
-                {language === 'en' ? 'Page' : 'Sayfa'} {safeCurrentPage} / {totalPages}
-              </span>
-              <button type="button" className="btn-secondary" onClick={() => goToPage(safeCurrentPage + 1)} disabled={safeCurrentPage === totalPages}>
-                {language === 'en' ? 'Next' : 'Sonraki'}
-              </button>
-            </div>
-          )}
-        </>
-      )}
-
-      {adminView === 'reminder-history' && (
-        <div className="container admin-container" style={{ marginTop: 32 }}>
-          <div className="page-header">
-            <div>
-              <h1>{t.reminderHistory}</h1>
-              <p>{language === 'en' ? 'History of reminder emails sent to registrants' : 'Kayıtlılara gönderilen hatırlatma e-postaları geçmişi'}</p>
-            </div>
-            <div className="page-actions">
-              <button type="button" className="btn-secondary" onClick={loadReminderLogs}>
-                {language === 'en' ? 'Refresh' : 'Yenile'}
-              </button>
-              <button type="button" className="btn-secondary" onClick={closeReminderHistory}>
-                {language === 'en' ? 'Back' : 'Geri'}
-              </button>
-            </div>
-          </div>
-
-          <div className="table-wrapper admin-table-wrapper">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>{language === 'en' ? 'Sent At' : 'Gönderim Zamanı'}</th>
-                  <th>{language === 'en' ? 'Type' : 'Tür'}</th>
-                  <th>{language === 'en' ? 'Message' : 'Mesaj'}</th>
-                  <th>{t.name}</th>
-                  <th>{t.surname}</th>
-                  <th>{t.email}</th>
-                  <th>Ref No</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reminderLogs.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" style={{ textAlign: 'center', padding: 40, color: '#6b7280' }}>
-                      {language === 'en' ? 'No reminders sent yet.' : 'Henüz hatırlatma gönderilmemiş.'}
-                    </td>
-                  </tr>
-                ) : (
-                  reminderLogs.map((log, index) => (
-                    <tr key={log.id || index}>
-                      <td>{new Date(log.sent_at).toLocaleString()}</td>
-                      <td style={{ textTransform: 'capitalize' }}>{log.type}</td>
-                      <td>{log.message || '-'}</td>
-                      <td>{log.name}</td>
-                      <td>{log.surname}</td>
-                      <td>{log.email}</td>
-                      <td>{log.reference_number}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {reminderModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h3>{t.sendReminder}</h3>
-            <p><strong>To:</strong> {reminderModal.email}</p>
-            <p><strong>Reference:</strong> {reminderModal.reference_number}</p>
-            <textarea
-              value={reminderMessage}
-              onChange={(e) => setReminderMessage(e.target.value)}
-              rows={12}
-              style={{ width: '100%', marginTop: 12, padding: 12, fontSize: 14, fontFamily: 'inherit' }}
-            />
-            <div className="button-group" style={{ marginTop: 16 }}>
-              <button type="button" className="btn-secondary" onClick={() => { setReminderModal(null); setReminderMessage(''); }}>
-                {t.cancel}
-              </button>
-              <button type="button" className="btn-primary" onClick={handleSendReminderEmail}>
-                {t.sendMessage}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {approvalModal && (
-        <div className="modal-overlay">
-          <div className="modal approval-modal">
-            <div className="approval-modal-header">
-              <h3>{language === 'en' ? 'Review Registration' : 'Kaydı İncele'}</h3>
-              <button type="button" className="btn-ghost" onClick={handleCloseApprovalModal} title={language === 'en' ? 'Close' : 'Kapat'}>
-                {language === 'en' ? 'Close' : 'Kapat'}
-              </button>
-            </div>
-            <div className="approval-modal-body">
-              <div className="approval-document">
-                <h4>{t.receiptFile || 'Car Document File'}</h4>
-                {receiptUrls[approvalModal.id] ? (
-                  <img
-                    src={receiptUrls[approvalModal.id]}
-                    alt="Car document"
-                    className="approval-document-image"
-                    style={{ transformOrigin: imageTransformOrigin }}
-                    onMouseMove={handleImageMouseMove}
-                    onMouseLeave={handleImageMouseLeave}
-                  />
-                ) : (
-                  <div className="approval-document-placeholder">
-                    {language === 'en' ? 'No document available' : 'Belge mevcut değil'}
-                  </div>
-                )}
-              </div>
-              <div className="approval-details">
-                <h4>{language === 'en' ? 'Registration Details' : 'Kayıt Detayları'}</h4>
-                <div className="approval-details-grid">
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.name}</span>
-                    <span className="approval-detail-value">{approvalModal.name}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.surname}</span>
-                    <span className="approval-detail-value">{approvalModal.surname}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.email}</span>
-                    <span className="approval-detail-value">{approvalModal.email}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.phone}</span>
-                    <span className="approval-detail-value">{approvalModal.phone}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.dob}</span>
-                    <span className="approval-detail-value">{approvalModal.dob}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.vehicleModel}</span>
-                    <span className="approval-detail-value">{approvalModal.vehicle_model}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.modelYear}</span>
-                    <span className="approval-detail-value">{approvalModal.model_year}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.licensePlate}</span>
-                    <span className="approval-detail-value">{approvalModal.license_plate}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.location}</span>
-                    <span className="approval-detail-value">{t.locations?.[approvalModal.location] || approvalModal.location}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">Ref No</span>
-                    <span className="approval-detail-value">{approvalModal.reference_number}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.submittedAt}</span>
-                    <span className="approval-detail-value">{new Date(approvalModal.submitted_at).toLocaleString()}</span>
-                  </div>
-                </div>
-                 <div className="form-group" style={{ marginTop: 16 }}>
-                   <label htmlFor="approval-chassis" style={{ fontWeight: 600, fontSize: '0.95em' }}>
-                     {t.chassisNumber}
-                   </label>
-                   <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-                     <input
-                       id="approval-chassis"
-                       type="text"
-                       value={approvalChassis}
-                       onChange={(e) => setApprovalChassis(e.target.value)}
-                       onKeyDown={(e) => {
-                         if (e.key === 'Enter') {
-                           e.preventDefault();
-                           handleApprove(approvalModal);
-                         }
-                       }}
-                       placeholder={language === 'en' ? 'Enter chassis number' : 'Şasi numarası girin'}
-                       style={{ flex: 1, padding: 10, fontSize: 14, fontFamily: 'inherit' }}
-                     />
-                     <button
-                       type="button"
-                       className="btn-ghost"
-                       onClick={() => setConfirmApproval(true)}
-                       title={language === 'en' ? 'Approve with chassis number' : 'Şasi numarasıyla onayla'}
-                     >
-                       <Edit size={18} />
-                     </button>
-                   </div>
-                 </div>
-                 <div className="form-group" style={{ marginTop: 16 }}>
-                   <label htmlFor="approval-message" style={{ fontWeight: 600, fontSize: '0.95em' }}>
-                     {language === 'en' ? 'Approval Message (optional)' : 'Onay Mesajı (isteğe bağlı)'}
-                   </label>
-                   <textarea
-                     id="approval-message"
-                     value={approvalMessage}
-                     onChange={(e) => setApprovalMessage(e.target.value)}
-                     rows={5}
-                     placeholder={language === 'en' ? 'Enter a custom message to include in the approval email...' : 'Onay e-postasına eklenecek özel mesajı girin...'}
-                     style={{ width: '100%', marginTop: 8, padding: 12, fontSize: 14, fontFamily: 'inherit', resize: 'vertical' }}
-                   />
-                 </div>
-              </div>
-            </div>
-            {confirmApproval && (
-              <div style={{ marginTop: 16, padding: 12, background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, color: '#92400e', fontWeight: 600 }}>
-                {t.confirmApproval}
-              </div>
-            )}
-            <div className="approval-modal-footer">
-              {!confirmApproval ? (
-                <>
-                  <button type="button" className="btn-secondary" onClick={handleCloseApprovalModal}>
-                    {language === 'en' ? 'Cancel' : 'İptal'}
-                  </button>
-                  <button type="button" className="btn-approve" onClick={() => setConfirmApproval(true)}>
-                    {t.approveRegistration}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button type="button" className="btn-secondary" onClick={() => setConfirmApproval(false)}>
-                    {t.confirmApprovalNo}
-                  </button>
-                  <button type="button" className="btn-approve" onClick={() => handleApprove(approvalModal)}>
-                    {t.confirmApprovalYes}
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {rejectionModal && (
-        <div className="modal-overlay">
-          <div className="modal rejection-modal">
-            <div className="approval-modal-header">
-              <h3>{language === 'en' ? 'Reject Registration' : 'Kaydı Reddet'}</h3>
-              <button type="button" className="btn-ghost" onClick={handleCloseRejectionModal} title={language === 'en' ? 'Close' : 'Kapat'}>
-                {language === 'en' ? 'Close' : 'Kapat'}
-              </button>
-            </div>
-            <div className="approval-modal-body">
-              <div className="approval-document">
-                <h4>{t.receiptFile || 'Car Document File'}</h4>
-                {receiptUrls[rejectionModal.id] ? (
-                  <img
-                    src={receiptUrls[rejectionModal.id]}
-                    alt="Car document"
-                    className="approval-document-image"
-                    style={{ transformOrigin: imageTransformOrigin }}
-                    onMouseMove={handleImageMouseMove}
-                    onMouseLeave={handleImageMouseLeave}
-                  />
-                ) : (
-                  <div className="approval-document-placeholder">
-                    {language === 'en' ? 'No document available' : 'Belge mevcut değil'}
-                  </div>
-                )}
-              </div>
-              <div className="approval-details">
-                <h4>{language === 'en' ? 'Registration Details' : 'Kayıt Detayları'}</h4>
-                <div className="approval-details-grid">
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.name}</span>
-                    <span className="approval-detail-value">{rejectionModal.name}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.surname}</span>
-                    <span className="approval-detail-value">{rejectionModal.surname}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.email}</span>
-                    <span className="approval-detail-value">{rejectionModal.email}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.phone}</span>
-                    <span className="approval-detail-value">{rejectionModal.phone}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.dob}</span>
-                    <span className="approval-detail-value">{rejectionModal.dob}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.vehicleModel}</span>
-                    <span className="approval-detail-value">{rejectionModal.vehicle_model}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.modelYear}</span>
-                    <span className="approval-detail-value">{rejectionModal.model_year}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.licensePlate}</span>
-                    <span className="approval-detail-value">{rejectionModal.license_plate}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.chassisNumber}</span>
-                    <span className="approval-detail-value">{rejectionModal.chassis_number || '-'}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.location}</span>
-                    <span className="approval-detail-value">{t.locations?.[rejectionModal.location] || rejectionModal.location}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">Ref No</span>
-                    <span className="approval-detail-value">{rejectionModal.reference_number}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.submittedAt}</span>
-                    <span className="approval-detail-value">{new Date(rejectionModal.submitted_at).toLocaleString()}</span>
-                  </div>
-                </div>
-                <h4 style={{ marginTop: 20 }}>{language === 'en' ? 'Rejection Details' : 'Reddetme Detayları'}</h4>
-                <RejectionForm
-                  record={rejectionModal}
-                  language={language}
-                  rejectionReasons={rejectionReasons}
-                  rejectionReasonOptions={rejectionReasonOptions}
-                  onReasonChange={handleRejectionReasonChange}
-                  onOtherChange={handleOtherReasonChange}
-                  onConfirm={() => {
-                    handleArchiveRecord(rejectionModal);
-                    handleCloseRejectionModal();
-                  }}
-                  onToggleRejectionForm={handleCloseRejectionModal}
-                  getStatusColor={getStatusColor}
-                  receiptUrls={receiptUrls}
-                  t={t}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {documentViewer && (
-        <div className="modal-overlay">
-          <div className="modal document-modal">
-            <div className="approval-modal-header">
-              <h3>{language === 'en' ? 'Car Document' : 'Araç Belgesi'}</h3>
-              <button type="button" className="btn-ghost" onClick={handleCloseDocument} title={language === 'en' ? 'Close' : 'Kapat'}>
-                {language === 'en' ? 'Close' : 'Kapat'}
-              </button>
-            </div>
-            <div className="approval-modal-body">
-              <div className="approval-document">
-                <h4>{t.receiptFile || 'Car Document File'}</h4>
-                {receiptUrls[documentViewer.id] ? (
-                  <img
-                    src={receiptUrls[documentViewer.id]}
-                    alt="Car document"
-                    className="approval-document-image"
-                    style={{ transformOrigin: imageTransformOrigin }}
-                    onMouseMove={handleImageMouseMove}
-                    onMouseLeave={handleImageMouseLeave}
-                  />
-                ) : (
-                  <div className="approval-document-placeholder">
-                    {language === 'en' ? 'No document available' : 'Belge mevcut değil'}
-                  </div>
-                )}
-              </div>
-              <div className="approval-details">
-                <h4>{language === 'en' ? 'Registration Details' : 'Kayıt Detayları'}</h4>
-                <div className="approval-details-grid">
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.name}</span>
-                    <span className="approval-detail-value">{documentViewer.name}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.surname}</span>
-                    <span className="approval-detail-value">{documentViewer.surname}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.email}</span>
-                    <span className="approval-detail-value">{documentViewer.email}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.phone}</span>
-                    <span className="approval-detail-value">{documentViewer.phone}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.dob}</span>
-                    <span className="approval-detail-value">{documentViewer.dob}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.vehicleModel}</span>
-                    <span className="approval-detail-value">{documentViewer.vehicle_model}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.modelYear}</span>
-                    <span className="approval-detail-value">{documentViewer.model_year}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.licensePlate}</span>
-                    <span className="approval-detail-value">{documentViewer.license_plate}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.chassisNumber}</span>
-                    <span className="approval-detail-value">{documentViewer.chassis_number || '-'}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.location}</span>
-                    <span className="approval-detail-value">{t.locations?.[documentViewer.location] || documentViewer.location}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">Ref No</span>
-                    <span className="approval-detail-value">{documentViewer.reference_number}</span>
-                  </div>
-                  <div className="approval-detail-item">
-                    <span className="approval-detail-label">{t.submittedAt}</span>
-                    <span className="approval-detail-value">{new Date(documentViewer.submitted_at).toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <div ref={ticketCaptureRef} style={{ position: 'fixed', left: '-9999px', top: 0, zIndex: -1 }}>
+        {approvalModal && (
+          <Ticket
+            title={language === 'tr' ? 'Kombos Tombala Gecesi Mercedes Sahiplerine Özel' : 'Kombos Bingo Night Exclusive for Mercedes Owners'}
+            subtitle={language === 'tr' ? 'Tebrikler, Kombos Bingoya katılımınız onaylandı. Bu etkinlik Mercedes-Benz sahiplerine özeldir ve 500.000 TL nakit ödülüyle.' : 'Congratulations, you have been approved to participate in the Kombos Bingo which is exclusive for Mercedes-Benz owners, with a cash prize of 500,000 TL.'}
+            referenceNumber={approvalModal.reference_number}
+            date={approvalModal.date || ''}
+            location={''}
+            image={ticketImage}
+            language={language}
+          />
+        )}
+      </div>
     </div>
   );
 };

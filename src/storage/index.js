@@ -1,12 +1,12 @@
 import { getRegistrations, findActiveRegistrationByEmail, findArchivedRegistrationByEmail, getRegistrationByReference, updateRegistrationByReference, saveRegistration, updateRegistration, archiveRegistration, deleteRegistration, getArchivedRegistrations, deleteArchivedRegistration, markEditLinkUsed } from './registrations';
 import { sendConfirmationEmail, sendReminderEmail, sendMessage, sendRejectionEmail, sendApprovalEmail } from './emails';
-import { uploadReceipt, getReceiptUrl } from './files';
+import { uploadReceipt, getReceiptUrl, uploadTicketImage, getTicketImageUrl } from './files';
 import { addReminder, getReminders } from './reminders';
 import { saveDraftRegistration, getDraft, saveDraft, clearDraft } from './drafts';
 
 export { getRegistrations, findActiveRegistrationByEmail, findArchivedRegistrationByEmail, getRegistrationByReference, updateRegistrationByReference, saveRegistration, updateRegistration, archiveRegistration, deleteRegistration, getArchivedRegistrations, deleteArchivedRegistration, markEditLinkUsed } from './registrations';
 export { sendConfirmationEmail, sendReminderEmail, sendMessage, sendRejectionEmail, sendApprovalEmail } from './emails';
-export { uploadReceipt, getReceiptUrl } from './files';
+export { uploadReceipt, getReceiptUrl, uploadTicketImage, getTicketImageUrl } from './files';
 export { addReminder, getReminders } from './reminders';
 export { saveDraftRegistration, getDraft, saveDraft, clearDraft } from './drafts';
 
@@ -35,7 +35,9 @@ const storage = {
   clearDraft,
   sendApprovalEmail,
   sendRejectionEmail,
-  sendMessage
+  sendMessage,
+  uploadTicketImage,
+  getTicketImageUrl
 };
 
 export default storage;

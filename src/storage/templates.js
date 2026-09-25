@@ -33,6 +33,22 @@ export const baseEmailTemplate = (title, bodyContent) => `<!DOCTYPE html>
       .callout-text { color: #f3f4f6 !important; }
     }
     @media (max-width: 640px) {
+      body { background-color: #f5f5f5 !important; }
+      .email-card { background-color: #ffffff !important; box-shadow: none !important; }
+      .email-header { background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important; border-bottom-color: #444444 !important; }
+      .email-body { color: #1a1a1a !important; }
+      .section-title { color: #1a1a1a !important; }
+      .body-text { color: #444444 !important; }
+      .highlight-box { background-color: #f9f9f9 !important; border-left-color: #1a1a1a !important; color: #1a1a1a !important; }
+      .event-badge { background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%) !important; color: #ffffff !important; }
+      .reference-box { background-color: #f9fafb !important; border-color: #e5e7eb !important; color: #1a1a1a !important; }
+      .reference-label { color: #9ca3af !important; }
+      .reference-value { color: #1a1a1a !important; }
+      .reference-note { color: #9ca3af !important; }
+      .footer { color: #888888 !important; border-top-color: #e5e5e5 !important; background-color: #fafafa !important; }
+      .primary-button { background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%) !important; color: #ffffff !important; }
+      .bingo-callout { background-color: #f9f9f9 !important; border-color: #1a1a1a !important; }
+      .callout-text { color: #1a1a1a !important; }
       .email-card { border-radius: 14px !important; margin: 16px auto !important; }
       .email-header { padding: 20px 18px !important; }
       .email-header img { max-height: 42px !important; max-width: 120px !important; }

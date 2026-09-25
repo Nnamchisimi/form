@@ -145,7 +145,8 @@ const App = () => {
             model_year: formData.modelYear,
             license_plate: formData.licensePlate,
             location: formData.location,
-            receipt_status: receiptPath ? 'Submitted' : 'Pending'
+            receipt_status: receiptPath ? 'Submitted' : 'Pending',
+            language
           };
           if (receiptPath) {
             updatePayload.vehicle_stub = receiptPath;
@@ -154,6 +155,12 @@ const App = () => {
           await storage.markEditLinkUsed(editingReference);
           console.log('Registration updated:', updated);
           showToast(language === 'tr' ? 'Kaydınız güncellendi.' : 'Your registration has been updated.', 'success');
+          try {
+            await storage.sendConfirmationEmail(updated, language);
+            console.log('Confirmation email sent after edit');
+          } catch (emailError) {
+            console.error('Confirmation email failed after edit:', emailError);
+          }
           setEditingReference(null);
           setFormData({
             name: '',
@@ -188,7 +195,8 @@ const App = () => {
           receipt_status: receiptPath ? 'Submitted' : 'Pending',
           verification_status: 'Pending',
           invitation_status: 'Pending',
-          reference_number: `KOMBOS-2026-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+          reference_number: `KOMBOS-2026-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+          language
         };
         
         const savedSubmission = await storage.saveRegistration(submission);
@@ -257,10 +265,11 @@ const App = () => {
         model_year: formData.modelYear,
         license_plate: formData.licensePlate,
         location: formData.location,
-        vehicle_stub: formData.vehicleStub
+        vehicle_stub: formData.vehicleStub,
+        language
       };
       const oldReference = editingReference;
-      const saved = await storage.saveDraftRegistration(payload);
+      const saved = await storage.saveDraftRegistration(payload, language);
       if (oldReference) {
         try {
           await storage.markEditLinkUsed(oldReference);

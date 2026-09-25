@@ -22,6 +22,13 @@ const AdminMobileCards = ({
   onViewDocument,
   isProcessing
 }) => {
+  const getLanguageLabel = (lang) => {
+    if (lang === 'tr') return 'TR';
+    if (lang === 'en') return 'EN';
+    if (!lang) return '-';
+    return String(lang).toUpperCase();
+  };
+
   return (
     <div className="admin-mobile-cards">
       {dataToShow.map((record, index) => (
@@ -64,6 +71,10 @@ const AdminMobileCards = ({
             <div className="admin-mobile-field">
               <span className="admin-mobile-field-label">Ref No</span>
               <span className="admin-mobile-field-value">{record.reference_number || '-'}</span>
+            </div>
+            <div className="admin-mobile-field">
+              <span className="admin-mobile-field-label">{t.language}</span>
+              <span className="admin-mobile-field-value">{getLanguageLabel(record.language)}</span>
             </div>
             <div className="admin-mobile-field">
               <span className="admin-mobile-field-label">{t.submittedAt}</span>

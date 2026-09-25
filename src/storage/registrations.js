@@ -155,7 +155,8 @@ export const archiveRegistration = async (registration, reason = 'Rejected') => 
     verification_status: registration.verification_status || 'Pending',
     invitation_status: registration.invitation_status || 'Pending',
     archived_reason: reason,
-    reference_number: registration.reference_number
+    reference_number: registration.reference_number,
+    language: registration.language || null
   };
 
   const { data, error } = await supabase

@@ -11,8 +11,8 @@ export const sendConfirmationEmail = async (registration, language = 'tr') => {
     const subject = isTurkish ? 'Kaydınız alındı - Serhan Kombos Otomotiv' : 'Registration received - Serhan Kombos Otomotiv';
     const greeting = isTurkish ? `Merhaba ${registration.name} ${registration.surname},` : `Hello ${registration.name} ${registration.surname},`;
     const intro = isTurkish ? 'Kaydınız başarıyla alındı.' : 'Your registration has been received successfully.';
-    const bingoText = isTurkish ? 'Artık Kombos Otomotiv Tombala çekilişine katıldınız.' : 'You are now entered in the Kombos Otomotiv Bingo draw.';
-    const progressText = isTurkish ? 'Kaydınız şu anda devam ediyor. Detaylarınızı inceledikten sonra onay durumu hakkında sizi bilgilendireceğiz.' : 'Your registration is currently in progress. We will review your details and notify you once it has been approved.';
+    const bingoText = isTurkish ? 'Kombos Otomotiv Tombala etkinliği için kaydınızı aldık.' : 'You are now entered in the Kombos Otomotiv Bingo draw.';
+    const progressText = isTurkish ? 'Detaylarınız incelendikten sonra etkinlik için sizi bilgilendireceğiz.' : 'Your registration is currently in progress. We will review your details and notify you once it has been approved.';
     const refLabel = isTurkish ? 'Referans Numaranız' : 'Your Reference Number';
     const refNote = isTurkish ? 'Bu bağlantı yalnızca bir kez kullanılabilir.' : 'This link can only be used once.';
 
@@ -28,10 +28,10 @@ export const sendConfirmationEmail = async (registration, language = 'tr') => {
           ${bingoCallout(bingoText)}
           ${bodyText(progressText)}
           ${sectionDivider()}
-          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:18px 20px;margin:24px 0;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.04);">
-            <p style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#9ca3af;margin:0 0 10px;text-transform:uppercase;">${refLabel}</p>
-            <p style="font-size:26px;font-weight:800;color:#1a1a1a;letter-spacing:0.5px;margin:0;"><a href="${BASE_URL}?ref=${registration.reference_number}" style="color:#1a1a1a;text-decoration:none;">${registration.reference_number}</a></p>
-            <p style="font-size:12px;color:#9ca3af;margin-top:10px;">${refNote}</p>
+          <div class="reference-box" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:18px 20px;margin:24px 0;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.04);">
+            <p class="reference-label" style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#9ca3af;margin:0 0 10px;text-transform:uppercase;">${refLabel}</p>
+            <p class="reference-value" style="font-size:26px;font-weight:800;color:#1a1a1a;letter-spacing:0.5px;margin:0;"><a href="${BASE_URL}?ref=${registration.reference_number}" style="color:#1a1a1a;text-decoration:none;">${registration.reference_number}</a></p>
+            <p class="reference-note" style="font-size:12px;color:#9ca3af;margin-top:10px;">${refNote}</p>
           </div>
           <div style="text-align:center;margin:0 0 24px;">
             ${primaryButton(`${BASE_URL}?ref=${registration.reference_number}`, isTurkish ? 'Kaydı Tamamla' : 'Complete Registration')}

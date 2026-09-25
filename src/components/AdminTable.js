@@ -23,6 +23,13 @@ const AdminTable = ({
   onViewDocument,
   isProcessing
 }) => {
+  const getLanguageLabel = (lang) => {
+    if (lang === 'tr') return 'TR';
+    if (lang === 'en') return 'EN';
+    if (!lang) return '-';
+    return String(lang).toUpperCase();
+  };
+
   return (
     <table className="admin-table">
       <thead>
@@ -38,6 +45,7 @@ const AdminTable = ({
           <th>{t.chassisNumber}</th>
           <th>{t.location}</th>
           <th>Ref No</th>
+          <th>{t.language}</th>
           <th>{t.submittedAt}</th>
           <th>{t.receiptFile || 'Car Document File'}</th>
           <th>{t.invitationStatus}</th>
@@ -58,6 +66,7 @@ const AdminTable = ({
             <td>{record.chassis_number || '-'}</td>
           <td>{t.locations[record.location] || record.location}</td>
           <td>{record.reference_number || '-'}</td>
+          <td>{getLanguageLabel(record.language)}</td>
           <td>{new Date(record.submitted_at).toLocaleString()}</td>
             <td>
               {record.vehicle_stub && receiptUrls[record.id] ? (

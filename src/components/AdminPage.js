@@ -461,7 +461,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const downloadExcel = () => {
     const dataToExport = showArchive ? archivedRecords : records;
     if (dataToExport.length === 0) return;
-    const headers = ['Name', 'Surname', 'Email', 'Phone', 'DOB', 'Vehicle Model', 'Model Year', 'License Plate', 'Chassis Number', 'Location', 'Reference No', 'Submitted At', 'Invitation Status'];
+    const headers = ['Name', 'Surname', 'Email', 'Phone', 'DOB', 'Vehicle Model', 'Model Year', 'License Plate', 'Chassis Number', 'Location', 'Language', 'Reference No', 'Submitted At', 'Invitation Status'];
     const rows = dataToExport.map(r => [
       r.name,
       r.surname,
@@ -473,6 +473,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
       r.license_plate,
       r.chassis_number || '',
       r.location,
+      r.language || '',
       r.reference_number || '',
       r.submitted_at,
       r.invitation_status || 'Pending'

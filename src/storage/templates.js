@@ -33,13 +33,18 @@ export const baseEmailTemplate = (title, bodyContent) => `<!DOCTYPE html>
       .callout-text { color: #f3f4f6 !important; }
     }
     @media (max-width: 640px) {
-      .email-card { border-radius: 14px !important; }
+      .email-card { border-radius: 14px !important; margin: 16px auto !important; }
       .email-header { padding: 20px 18px !important; }
       .email-header img { max-height: 42px !important; max-width: 120px !important; }
       .email-body { padding: 22px 18px !important; font-size: 14px !important; }
       .section-title { font-size: 18px !important; }
       .reference-value { font-size: 22px !important; }
       .primary-button { padding: 12px 22px !important; font-size: 13px !important; }
+      .event-badge { font-size: 12px !important; padding: 8px 18px !important; }
+      .bingo-callout { padding: 16px 18px !important; }
+      .highlight-box { padding: 16px 18px !important; }
+      .footer { padding: 18px !important; font-size: 11px !important; }
+      .email-card > div { padding-left: 18px !important; padding-right: 18px !important; }
     }
   </style>
 </head>

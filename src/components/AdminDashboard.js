@@ -3,6 +3,29 @@ import AdminTable from './AdminTable';
 import AdminMobileCards from './AdminMobileCards';
 import { Download, Users, Archive, LogOut } from '../icons';
 
+const getPageNumbers = (current, total) => {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const pages = [];
+  pages.push(1);
+
+  if (current > 3) pages.push('...');
+
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+
+  if (current < total - 2) pages.push('...');
+
+  pages.push(total);
+  return pages;
+};
+
 const AdminDashboard = ({
   dataToShow,
   showArchive,
@@ -35,6 +58,10 @@ const AdminDashboard = ({
   toggleArchiveView,
   handleLogout,
   sessionUserEmail,
+  searchQuery,
+  onSearchChange,
+  sortOrder,
+  onToggleSortOrder,
 }) => {
   return (
     <>
@@ -45,6 +72,13 @@ const AdminDashboard = ({
               <h1>{t.adminTitle}</h1>
               {sessionUserEmail && <p className="admin-email">{sessionUserEmail}</p>}
               <p>{showArchive ? t.archivedRegistrations : t.adminSubtitle}</p>
+              <input
+                type="text"
+                className="admin-search"
+                value={searchQuery}
+                onChange={(e) => onSearchChange?.(e.target.value)}
+                placeholder={language === 'en' ? 'Search registrations...' : 'Kayıtları ara...'}
+              />
             </div>
             <div className="page-actions">
               <button
@@ -69,11 +103,19 @@ const AdminDashboard = ({
               <button
                 type="button"
                 className={`btn-ghost ${showArchive ? 'active' : ''}`}
-                onClick={() => { if (!showArchive) toggleArchiveView(); }}
+                onClick={() => { if (showArchive) toggleArchiveView(); }}
                 title={t.archivedRegistrations}
               >
                 <Archive size={18} style={{ marginRight: 6 }} />
                 {t.archivedRegistrations}
+              </button>
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={onToggleSortOrder}
+                title={sortOrder === 'asc' ? (language === 'en' ? 'Oldest first' : 'Eskiden yeniye') : (language === 'en' ? 'Newest first' : 'Yeniden eskiye')}
+              >
+                {sortOrder === 'asc' ? (language === 'en' ? '↑ Oldest' : '↑ Eskiden') : (language === 'en' ? '↓ Newest' : '↓ Yeniden')}
               </button>
               <button
                 type="button"
@@ -151,13 +193,36 @@ const AdminDashboard = ({
 
           {totalPages > 1 && (
             <div className="pagination">
-              <button type="button" className="btn-secondary" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>
+              <button
+                type="button"
+                className="btn-secondary pagination-arrow"
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
                 {language === 'en' ? 'Previous' : 'Önceki'}
               </button>
-              <span className="pagination-info">
-                {language === 'en' ? 'Page' : 'Sayfa'} {currentPage} / {totalPages}
-              </span>
-              <button type="button" className="btn-secondary" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages}>
+              <div className="pagination-pages">
+                {getPageNumbers(currentPage, totalPages).map((page, idx) =>
+                  page === '...' ? (
+                    <span key={`ellipsis-${idx}`} className="pagination-ellipsis">...</span>
+                  ) : (
+                    <button
+                      key={page}
+                      type="button"
+                      className={`btn-secondary pagination-page ${currentPage === page ? 'active' : ''}`}
+                      onClick={() => goToPage(page)}
+                    >
+                      {page}
+                    </button>
+                  )
+                )}
+              </div>
+              <button
+                type="button"
+                className="btn-secondary pagination-arrow"
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
                 {language === 'en' ? 'Next' : 'Sonraki'}
               </button>
             </div>

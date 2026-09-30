@@ -38,6 +38,8 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const ticketCaptureRef = useRef(null);
   const [ticketImageUrl, setTicketImageUrl] = useState(null);
   const itemsPerPage = 10;
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState('desc');
   const t = translations[language];
   const rejectionReasonOptions = [
     { value: 'invalid_details', en: 'Invalid/incorrect details', tr: 'Geçersiz/yanlış detaylar' },
@@ -46,7 +48,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [showArchive, records.length, archivedRecords.length]);
+  }, [showArchive, records.length, archivedRecords.length, searchQuery, sortOrder]);
 
   useEffect(() => {
     if (!session) return;
@@ -381,6 +383,10 @@ const AdminPage = ({ language, onBack, onToast }) => {
     }
   };
 
+  const toggleSortOrder = () => {
+    setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+  };
+
   const loadReminderLogs = useCallback(async () => {
     try {
       const { data, error } = await supabase
@@ -519,7 +525,27 @@ const AdminPage = ({ language, onBack, onToast }) => {
     );
   }
 
-  const dataToShow = showArchive ? archivedRecords : records;
+  const sourceRecords = showArchive ? archivedRecords : records;
+  const filteredRecords = sourceRecords.filter(record => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      (record.name && record.name.toLowerCase().includes(query)) ||
+      (record.surname && record.surname.toLowerCase().includes(query)) ||
+      (record.email && record.email.toLowerCase().includes(query)) ||
+      (record.phone && record.phone.toLowerCase().includes(query)) ||
+      (record.license_plate && record.license_plate.toLowerCase().includes(query)) ||
+      (record.reference_number && record.reference_number.toLowerCase().includes(query)) ||
+      (record.location && record.location.toLowerCase().includes(query)) ||
+      (record.invitation_status && record.invitation_status.toLowerCase().includes(query))
+    );
+  });
+  const sortedRecords = [...filteredRecords].sort((a, b) => {
+    const dateA = new Date(a.submitted_at || 0).getTime();
+    const dateB = new Date(b.submitted_at || 0).getTime();
+    return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+  });
+  const dataToShow = sortedRecords;
   const totalPages = Math.max(1, Math.ceil(dataToShow.length / itemsPerPage));
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const paginatedData = dataToShow.slice((safeCurrentPage - 1) * itemsPerPage, safeCurrentPage * itemsPerPage);
@@ -564,6 +590,10 @@ const AdminPage = ({ language, onBack, onToast }) => {
         toggleArchiveView={toggleArchiveView}
         handleLogout={handleLogout}
         sessionUserEmail={session?.user?.email}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        sortOrder={sortOrder}
+        onToggleSortOrder={toggleSortOrder}
       />
 
       <AdminModals

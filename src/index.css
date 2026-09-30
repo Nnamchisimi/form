@@ -515,8 +515,34 @@ button {
 .pagination {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.pagination-pages {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pagination-page {
+  min-width: 38px;
+  justify-content: center;
+  padding: 8px 10px;
+}
+
+.pagination-page.active {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+.pagination-ellipsis {
+  color: #6b7280;
+  font-weight: 600;
+  padding: 0 2px;
+  user-select: none;
 }
 
 .pagination-info {
@@ -1301,6 +1327,30 @@ button {
   font-size: 0.95em;
   color: #6b7280;
   margin: 0;
+}
+
+.admin-search {
+  margin-top: 10px;
+  width: 100%;
+  max-width: 420px;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #000000;
+  font-size: 0.95em;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-search:focus {
+  outline: none;
+  border-color: #000000;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
+}
+
+.admin-search::placeholder {
+  color: #9ca3af;
 }
 
 .page-actions {
@@ -2326,4 +2376,8 @@ button {
 .approval-modal .btn-ghost {
   padding: 8px;
   min-width: 40px;
+}
+
+.admin-sort-btn {
+  white-space: nowrap;
 }

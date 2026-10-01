@@ -103,7 +103,7 @@ const AdminDashboard = ({
               <button
                 type="button"
                 className={`btn-ghost ${showArchive ? 'active' : ''}`}
-                onClick={() => { if (showArchive) toggleArchiveView(); }}
+                onClick={() => { if (!showArchive) toggleArchiveView(); }}
                 title={t.archivedRegistrations}
               >
                 <Archive size={18} style={{ marginRight: 6 }} />

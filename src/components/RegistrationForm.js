@@ -297,7 +297,7 @@ const RegistrationForm = ({ language, formData, setFormData, fileName, setFileNa
 
       <div className="form-group">
         <label>{t.uploadStub}</label>
-        <div className="file-upload" onClick={() => document.getElementById('vehicleStub').click()}>
+        <div className={`file-upload${fileName !== 'No file chosen' ? ' file-upload-success' : ''}`} onClick={() => document.getElementById('vehicleStub').click()}>
           <input
             type="file"
             id="vehicleStub"

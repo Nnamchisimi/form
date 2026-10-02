@@ -320,6 +320,16 @@ select option {
   background: #f3f4f6;
 }
 
+.file-upload.file-upload-success {
+  border-color: #22c55e;
+  background: #f0fdf4;
+}
+
+.file-upload.file-upload-success:hover {
+  border-color: #16a34a;
+  background: #dcfce7;
+}
+
 .file-upload input[type="file"] {
   display: none;
 }

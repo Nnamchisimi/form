@@ -1,18 +1,38 @@
 import { supabase } from '../supabaseClient';
 
-export const getRegistrations = async () => {
-  const { data, error } = await supabase
-    .from('registrations')
-    .select('*')
-    .order('submitted_at', { ascending: false });
+const ROW_BATCH_SIZE = 1000;
 
-  if (error) {
-    console.error('Error fetching registrations:', error);
-    return [];
+const fetchAllRows = async (table, orderColumn, ascending = false) => {
+  const rows = [];
+  let offset = 0;
+
+  while (true) {
+    const to = offset + ROW_BATCH_SIZE - 1;
+    const { data, error } = await supabase
+      .from(table)
+      .select('*')
+      .order(orderColumn, { ascending })
+      .order('id', { ascending: true })
+      .range(offset, to);
+
+    if (error) {
+      console.error(`Error fetching ${table}:`, error);
+      return [];
+    }
+
+    if (!data || data.length === 0) break;
+
+    rows.push(...data);
+
+    if (data.length < ROW_BATCH_SIZE) break;
+
+    offset += ROW_BATCH_SIZE;
   }
 
-  return data || [];
+  return rows;
 };
+
+export const getRegistrations = async () => fetchAllRows('registrations', 'submitted_at', false);
 
 export const findActiveRegistrationByEmail = async (email) => {
   if (!email) return null;
@@ -216,19 +236,7 @@ export const deleteRegistration = async (id) => {
   return data;
 };
 
-export const getArchivedRegistrations = async () => {
-  const { data, error } = await supabase
-    .from('archived_registrations')
-    .select('*')
-    .order('archived_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching archived registrations:', error);
-    return [];
-  }
-
-  return data || [];
-};
+export const getArchivedRegistrations = async () => fetchAllRows('archived_registrations', 'archived_at', false);
 
 export const deleteArchivedRegistration = async (record) => {
   if (record?.vehicle_stub) {

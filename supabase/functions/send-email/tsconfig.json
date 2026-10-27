@@ -1,7 +1,0 @@
-{
-  "compilerOptions": {
-    "lib": ["es2022"],
-    "strict": true,
-    "types": ["deno"]
-  }
-}

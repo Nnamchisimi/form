@@ -212,33 +212,35 @@ export const sendApprovalEmail = async (registration, customMessage, language = 
 
       const ticketSection = ticketImageUrl
         ? `<div style="text-align:center;margin:24px 0 0;"><img src="${ticketImageUrl}" alt="Ticket" style="max-width:100%;height:auto;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.35);" /></div>`
-        : `<div style="width:100%;max-width:720px;border-radius:16px;overflow:hidden;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.08);background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);color:#ffffff;">
+        : `<div style="width:100%;max-width:720px;border-radius:16px;overflow:hidden;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.08);background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);color:#ffffff;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
             <div style="display:flex;">
               <div style="flex:1;background:linear-gradient(135deg,#c4b9ab 0%,#e1ddcc 50%,#fdfaf2 100%);padding:32px 32px 32px 40px;display:flex;flex-direction:column;gap:16px;">
                 <div style="display:flex;align-items:center;gap:10px;">
                   <img src="${LOGO_URL}" alt="Mercedes" style="width:36px;height:36px;object-fit:contain;filter:brightness(0) invert(1);" />
                 <div style="display:flex;flex-direction:column;gap:2px;">
-                  <span style="font-size:20px;font-weight:700;letter-spacing:0.5px;color:#78350f;">Serhan Kombos</span>
-                  <span style="font-size:11px;font-weight:600;letter-spacing:2px;color:#6b4c35;">OTOMOTIV</span>
+                  <span style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:20px;font-weight:700;letter-spacing:0.5px;color:#78350f;">Serhan Kombos</span>
+                  <span style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;color:#6b4c35;">OTOMOTIV</span>
                 </div>
                 </div>
                 <div style="width:100%;height:1px;background:linear-gradient(90deg,rgba(120,53,15,0.2) 0%,rgba(120,53,15,0.08) 100%);"></div>
                  <div style="display:flex;flex-direction:column;gap:8px;">
-                  <div style="font-size:24px;font-weight:700;line-height:1.2;color:#451a03;margin:0;">${isTurkish ? 'Kombos Tombala Gecesi Mercedes Sahiplerine Özel' : 'Kombos Bingo Night Exclusive for Mercedes Owners'}</div>
-                  <div style="font-size:14px;color:#5c4033;line-height:1.5;margin:0;">${isTurkish ? 'Tebrikler, Kombos Bingoya katılımınız onaylandı. Bu etkinlik Mercedes-Benz sahiplerine özeldir ve 500.000 TL nakit ödülüyle.' : 'Congratulations, you have been approved to participate in the Kombos Bingo which is exclusive for Mercedes-Benz owners, with a cash prize of 500,000 TL.'}</div>
-                   <div style="display:flex;align-items:stretch;background:rgba(255,255,255,0.55);border:1px solid rgba(180,83,9,0.25);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(69,26,3,0.08);">
-                     <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:14px 18px;min-width:0;">
-                       <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#92400e;opacity:0.8;">${isTurkish ? 'Tarih' : 'Date'}</span>
-                       <span style="font-size:14px;font-weight:700;color:#451a03;line-height:1.3;word-break:break-word;">&nbsp;</span>
-                     </div>
+                  <div style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:24px;font-weight:700;line-height:1.2;letter-spacing:-0.02em;color:#451a03;margin:0;word-break:break-word;">${isTurkish ? 'Kombos Tombala Gecesi' : 'Kombos Bingo Night'}</div>
+                  <div style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:16px;font-weight:600;line-height:1.4;color:#92400e;margin:4px 0 0;">${isTurkish ? 'Davetiye' : 'Invitation'}</div>
+                  <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:#5c4033;line-height:1.6;margin:0;letter-spacing:-0.01em;">${isTurkish ? 'Tombalaya kaydınız tamamlanmış ve onaylanmıştır.' : 'Your registration for the tombola has been successfully completed and confirmed.'}</p>
+                  <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:#5c4033;line-height:1.6;margin:0;letter-spacing:-0.01em;">${isTurkish ? 'Lütfen biletinizi showroomlarımızdan temin etmeniz gerekmektedir.' : 'Please collect your ticket from our showrooms.'}</p>
+                    <div style="display:flex;align-items:stretch;background:rgba(255,255,255,0.55);border:1px solid rgba(180,83,9,0.25);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(69,26,3,0.08);">
+                      <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:14px 18px;min-width:0;">
+                        <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#92400e;opacity:0.8;">${isTurkish ? 'Tarih' : 'Date'} &#128347;</span>
+                        <span style="font-size:14px;font-weight:700;color:#451a03;line-height:1.3;word-break:break-word;">${language === 'tr' ? '07 KASIM 2026 11:00 CUMARTESİ' : '07 NOVEMBER 2026 11:00 | SATURDAY'}</span>
+                      </div>
+                      <div style="width:1px;background:linear-gradient(to bottom,transparent,rgba(180,83,9,0.35),transparent);align-self:stretch;"></div>
+                      <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:14px 18px;min-width:0;">
+                        <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#92400e;opacity:0.8;">${isTurkish ? 'Konum' : 'Location'}</span>
+                        <span style="font-size:14px;font-weight:700;color:#451a03;line-height:1.3;word-break:break-word;">${language === 'tr' ? 'KOMBOS OTOMOTİV LEFKOŞA' : 'KOMBOS AUTOMOTIVE | LEFKOSA'}</span>
+                      </div>
                      <div style="width:1px;background:linear-gradient(to bottom,transparent,rgba(180,83,9,0.35),transparent);align-self:stretch;"></div>
                      <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:14px 18px;min-width:0;">
-                       <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#92400e;opacity:0.8;">${isTurkish ? 'Konum' : 'Location'}</span>
-                       <span style="font-size:14px;font-weight:700;color:#451a03;line-height:1.3;word-break:break-word;">&nbsp;</span>
-                     </div>
-                     <div style="width:1px;background:linear-gradient(to bottom,transparent,rgba(180,83,9,0.35),transparent);align-self:stretch;"></div>
-                     <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:14px 18px;min-width:0;">
-                       <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#92400e;opacity:0.8;">REF</span>
+                        <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#92400e;opacity:0.8;">REF &#35;</span>
                        <span style="font-size:14px;font-weight:700;color:#451a03;line-height:1.3;word-break:break-all;">${registration.reference_number || 'KOMBOS-2026'}</span>
                      </div>
                    </div>
@@ -249,9 +251,15 @@ export const sendApprovalEmail = async (registration, customMessage, language = 
                </div>
              </div>
            </div>
-           <div style="text-align:center;margin:20px 0 0;">
-             <p style="font-size:12px;color:#888888;margin:0;">Use your browser's print function to save or print this ticket.</p>
-           </div>`;
+            <div style="text-align:center;margin:20px 0 0;">
+              <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#888888;margin:0;">Use your browser's print function to save or print this ticket.</p>
+            </div>
+            <div style="text-align:center;margin-top:8px;">
+              <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#6b4c35;line-height:1.5;letter-spacing:-0.01em;margin:0;">${isTurkish ? '* Davetiyeniz ile birlikte showroomlarımızdan tombala biletinizi tombala gecesinden önce temin etmeyi unutmayın.' : '*Please don\'t forget to collect your tombola ticket from our showrooms'}</p>
+            </div>
+            <div style="text-align:right;margin-top:4px;">
+              <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#6b4c35;line-height:1.5;letter-spacing:-0.01em;margin:0;"><span style="font-size:12px;">&#128222;</span> ${isTurkish ? '0533 871 38 38' : '0533 871 38 38'}</p>
+            </div>`;
 
       const { error: emailError } = await supabase.functions.invoke('rapid-service', {
         body: {

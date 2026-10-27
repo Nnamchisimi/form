@@ -288,14 +288,14 @@ const AdminPage = ({ language, onBack, onToast }) => {
       try {
         await storage.sendApprovalEmail(updatedRecord, approvalMessage.trim() || undefined, language, generatedTicketUrl);
       } catch (emailError) {
-        console.error('Approval email error:', emailError);
-      }
-      showToast(t.registrationApprovedAndArchived, 'success');
-      setRecords(prev => prev.filter(r => r.id !== record.id));
-      setTicketImageUrl(null);
-      await loadArchivedRegistrations();
-      await loadRegistrations();
-      handleCloseApprovalModal();
+         console.error('Approval email error:', emailError);
+       }
+        showToast(t.registrationApprovedAndArchived, 'success');
+        handleCloseApprovalModal();
+        setRecords(prev => prev.filter(r => r.id !== record.id));
+        setTicketImageUrl(null);
+        await loadArchivedRegistrations();
+        await loadRegistrations();
     } catch (error) {
       console.error('Error approving registration:', error);
       showToast('Error approving registration', 'error');
@@ -632,11 +632,11 @@ const AdminPage = ({ language, onBack, onToast }) => {
       <div ref={ticketCaptureRef} style={{ position: 'fixed', left: '-9999px', top: 0, zIndex: -1 }}>
         {approvalModal && (
           <Ticket
-            title={language === 'tr' ? 'Kombos Tombala Gecesi Mercedes Sahiplerine Özel' : 'Kombos Bingo Night Exclusive for Mercedes Owners'}
-            subtitle={language === 'tr' ? 'Tebrikler, Kombos Bingoya katılımınız onaylandı. Bu etkinlik Mercedes-Benz sahiplerine özeldir ve 500.000 TL nakit ödülüyle.' : 'Congratulations, you have been approved to participate in the Kombos Bingo which is exclusive for Mercedes-Benz owners, with a cash prize of 500,000 TL.'}
+            title={language === 'tr' ? 'Kombos Tombala Gecesi' : 'Kombos Bingo Night'}
+            subtitle={language === 'tr' ? 'Davetiye' : 'Invitation'}
             referenceNumber={approvalModal.reference_number}
-            date={approvalModal.date || ''}
-            location={''}
+            date={language === 'tr' ? '07 KASIM 2026 11:00 CUMARTESİ' : '07 NOVEMBER 2026 11:00 | SATURDAY'}
+            location={language === 'tr' ? 'KOMBOS OTOMOTİV LEFKOŞA' : 'KOMBOS AUTOMOTIVE | LEFKOSA'}
             image={ticketImage}
             language={language}
           />

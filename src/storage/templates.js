@@ -6,6 +6,9 @@ export const baseEmailTemplate = (title, bodyContent) => `<!DOCTYPE html>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light dark">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <title>${title}</title>
   <style>
     @media print {
@@ -64,7 +67,7 @@ export const baseEmailTemplate = (title, bodyContent) => `<!DOCTYPE html>
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background-color:#f5f5f5;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+  <body style="margin:0;padding:0;background-color:#f5f5f5;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
   <div class="email-card" style="max-width:720px;width:92vw;margin:24px auto;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.12);">
     <div class="email-header" style="background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);padding:28px 32px;text-align:center;position:relative;border-bottom:3px solid #444444;">
       <img src="${LOGO_URL}" alt="Mercedes Logo" style="max-height:56px;max-width:160px;position:relative;z-index:2;" />

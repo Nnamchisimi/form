@@ -24,6 +24,7 @@ export const baseEmailTemplate = (title, bodyContent) => `<!DOCTYPE html>
       .email-body { color: #f3f4f6 !important; }
       .section-title { color: #f9fafb !important; }
       .body-text { color: #e5e7eb !important; }
+      .bingo-text { color: #ffffff !important; }
       .highlight-box { background-color: #1f2937 !important; border-left-color: #4b5563 !important; color: #e5e7eb !important; }
       .event-badge { background: linear-gradient(135deg, #374151 0%, #1f2937 100%) !important; color: #f3f4f6 !important; }
       .reference-box { background-color: #1f2937 !important; border-color: #374151 !important; color: #f9fafb !important; }
@@ -93,7 +94,7 @@ export const highlightBox = (content) => `<div class="highlight-box" style="back
   ${content}
 </div>`;
 
-export const eventInfo = (isTurkish = false) => `<p class="body-text" style="margin:0 0 8px;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><strong>${isTurkish ? 'Etkinlik' : 'Event'}:</strong> ${isTurkish ? 'Kombos Otomotiv Tombala' : 'Kombos Otomotiv Bingo'}</p>
+export const eventInfo = (isTurkish = false) => `<p class="body-text" style="margin:0 0 8px;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><strong>${isTurkish ? 'Etkinlik' : 'Event'}:</strong> <span class="bingo-text">${isTurkish ? 'Kombos Otomotiv Tombala' : 'Kombos Otomotiv Bingo'}</span></p>
 <p class="body-text" style="margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><strong>${isTurkish ? 'Ödül' : 'Prize'}:</strong> ${isTurkish ? '500.000 TL nakit ödül' : '500,000 TL cash prize'}</p>`;
 
 export const bingoCallout = (text = 'Your registration is confirmed.') => `<div class="bingo-callout" style="background:#f9f9f9;border:2px solid #1a1a01;border-radius:12px;padding:18px 20px;margin:18px 0;box-shadow:0 2px 8px rgba(0,0,0,0.06);">

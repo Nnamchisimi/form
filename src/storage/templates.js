@@ -26,7 +26,7 @@ export const baseEmailTemplate = (title, bodyContent) => `<!DOCTYPE html>
       .body-text { color: #e5e7eb !important; }
       .bingo-text { color: #ffffff !important; }
       .highlight-box { background-color: #1f2937 !important; border-left-color: #4b5563 !important; color: #e5e7eb !important; }
-      .event-badge { background: linear-gradient(135deg, #374151 0%, #1f2937 100%) !important; color: #f3f4f6 !important; }
+      .event-badge { background: linear-gradient(135deg, #374151 0%, #1f2937 100%) !important; color: #ffffff !important; }
       .reference-box { background-color: #1f2937 !important; border-color: #374151 !important; color: #f9fafb !important; }
       .reference-label { color: #9ca3af !important; }
       .reference-value { color: #f9fafb !important; }
@@ -34,7 +34,7 @@ export const baseEmailTemplate = (title, bodyContent) => `<!DOCTYPE html>
       .footer { color: #9ca3af !important; border-top-color: #374151 !important; background-color: #0f0f0f !important; }
       .primary-button { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important; color: #ffffff !important; }
       .bingo-callout { background-color: #1f2937 !important; border-color: #4b5563 !important; }
-      .callout-text { color: #f3f4f6 !important; }
+      .callout-text { color: #ffffff !important; }
     }
     @media (max-width: 640px) {
       body { background-color: #f5f5f5 !important; }
@@ -86,7 +86,7 @@ export const baseEmailTemplate = (title, bodyContent) => `<!DOCTYPE html>
 export const eventBadge = (isTurkish = false) => `<div style="text-align:center;margin-bottom:24px;">
   <span class="event-badge" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1a01 0%,#333333 100%);color:#ffffff;padding:10px 24px;border-radius:25px;font-size:13px;font-weight:700;letter-spacing:0.8px;box-shadow:0 4px 15px rgba(0,0,0,0.2);">
     <span style="width:8px;height:8px;background:#ffffff;border-radius:50%;display:inline-block;opacity:0.9;"></span>
-    ${isTurkish ? 'Kombos Otomotiv Tombala' : 'Kombos Otomotiv Bingo'}
+    <font color="#ffffff" style="color:#ffffff !important;">${isTurkish ? 'Kombos Otomotiv Tombala' : 'Kombos Otomotiv Bingo'}</font>
   </span>
 </div>`;
 

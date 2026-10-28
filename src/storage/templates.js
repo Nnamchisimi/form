@@ -32,7 +32,7 @@ export const baseEmailTemplate = (title, bodyContent) => `<!DOCTYPE html>
       .reference-note { color: #9ca3af !important; }
       .footer { color: #9ca3af !important; border-top-color: #374151 !important; background-color: #0f0f0f !important; }
       .primary-button { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important; color: #ffffff !important; }
-      .bingo-callout { background-color: #1f2937 !important; border-color: #374151 !important; }
+      .bingo-callout { background-color: #1f2937 !important; border-color: #4b5563 !important; }
       .callout-text { color: #f3f4f6 !important; }
     }
     @media (max-width: 640px) {
@@ -42,16 +42,16 @@ export const baseEmailTemplate = (title, bodyContent) => `<!DOCTYPE html>
       .email-body { color: #1a1a1a !important; }
       .section-title { color: #1a1a1a !important; }
       .body-text { color: #444444 !important; }
-      .highlight-box { background-color: #f9f9f9 !important; border-left-color: #1a1a1a !important; color: #1a1a1a !important; }
+      .highlight-box { background-color: #f9f9f9 !important; border-left-color: #1a1a01 !important; color: #1a1a01 !important; }
       .event-badge { background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%) !important; color: #ffffff !important; }
-      .reference-box { background-color: #f9fafb !important; border-color: #e5e7eb !important; color: #1a1a1a !important; }
+      .reference-box { background-color: #f9f9f8 !important; border-color: #e5e7eb !important; color: #1a1a01 !important; }
       .reference-label { color: #9ca3af !important; }
-      .reference-value { color: #1a1a1a !important; }
+      .reference-value { color: #1a1a01 !important; }
       .reference-note { color: #9ca3af !important; }
       .footer { color: #888888 !important; border-top-color: #e5e5e5 !important; background-color: #fafafa !important; }
       .primary-button { background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%) !important; color: #ffffff !important; }
-      .bingo-callout { background-color: #f9f9f9 !important; border-color: #1a1a1a !important; }
-      .callout-text { color: #1a1a1a !important; }
+      .bingo-callout { background-color: #f9f9f9 !important; border-color: #1a1a01 !important; }
+      .callout-text { color: #1a1a01 !important; }
       .email-card { border-radius: 14px !important; margin: 16px auto !important; }
       .email-header { padding: 20px 18px !important; }
       .email-header img { max-height: 42px !important; max-width: 120px !important; }
@@ -67,12 +67,12 @@ export const baseEmailTemplate = (title, bodyContent) => `<!DOCTYPE html>
     }
   </style>
 </head>
-  <body style="margin:0;padding:0;background-color:#f5f5f5;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+<body style="margin:0;padding:0;background-color:#f5f5f5;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
   <div class="email-card" style="max-width:720px;width:92vw;margin:24px auto;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.12);">
     <div class="email-header" style="background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);padding:28px 32px;text-align:center;position:relative;border-bottom:3px solid #444444;">
       <img src="${LOGO_URL}" alt="Mercedes Logo" style="max-height:56px;max-width:160px;position:relative;z-index:2;" />
     </div>
-    <div class="email-body" style="padding:32px;color:#1a1a1a;font-size:15px;line-height:1.7;">
+    <div class="email-body" style="padding:32px;color:#1a1a01;font-size:15px;line-height:1.7;">
       ${bodyContent}
     </div>
     <div class="footer no-print" style="padding:20px 32px;text-align:center;color:#888888;font-size:11px;border-top:1px solid #e5e5e5;background:#fafafa;">
@@ -83,29 +83,29 @@ export const baseEmailTemplate = (title, bodyContent) => `<!DOCTYPE html>
 </html>`;
 
 export const eventBadge = (isTurkish = false) => `<div style="text-align:center;margin-bottom:24px;">
-  <span class="event-badge" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1a1a 0%,#333333 100%);color:#ffffff;padding:10px 24px;border-radius:25px;font-size:13px;font-weight:700;letter-spacing:0.8px;box-shadow:0 4px 15px rgba(0,0,0,0.2);">
+  <span class="event-badge" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1a01 0%,#333333 100%);color:#ffffff;padding:10px 24px;border-radius:25px;font-size:13px;font-weight:700;letter-spacing:0.8px;box-shadow:0 4px 15px rgba(0,0,0,0.2);">
     <span style="width:8px;height:8px;background:#ffffff;border-radius:50%;display:inline-block;opacity:0.9;"></span>
     ${isTurkish ? 'Kombos Otomotiv Tombala' : 'Kombos Otomotiv Bingo'}
   </span>
 </div>`;
 
-export const highlightBox = (content) => `<div class="highlight-box" style="background:#f9f9f9;border-left:4px solid #1a1a1a;padding:18px 20px;border-radius:0 12px 12px 0;margin:20px 0;color:#1a1a1a;">
+export const highlightBox = (content) => `<div class="highlight-box" style="background:#f9f9f9;border-left:4px solid #1a1a01;padding:18px 20px;border-radius:0 12px 12px 0;margin:20px 0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
   ${content}
 </div>`;
 
-export const eventInfo = (isTurkish = false) => `<p style="margin:0 0 8px;color:#333333;"><strong>${isTurkish ? 'Etkinlik' : 'Event'}:</strong> ${isTurkish ? 'Kombos Otomotiv Tombala' : 'Kombos Otomotiv Bingo'}</p>
-<p style="margin:0;color:#333333;"><strong>${isTurkish ? 'Ödül' : 'Prize'}:</strong> ${isTurkish ? '500.000 TL nakit ödül' : '500,000 TL cash prize'}</p>`;
+export const eventInfo = (isTurkish = false) => `<p class="body-text" style="margin:0 0 8px;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><strong>${isTurkish ? 'Etkinlik' : 'Event'}:</strong> ${isTurkish ? 'Kombos Otomotiv Tombala' : 'Kombos Otomotiv Bingo'}</p>
+<p class="body-text" style="margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><strong>${isTurkish ? 'Ödül' : 'Prize'}:</strong> ${isTurkish ? '500.000 TL nakit ödül' : '500,000 TL cash prize'}</p>`;
 
-export const bingoCallout = (text = 'Your registration is confirmed.') => `<div class="bingo-callout" style="background:#f9f9f9;border:2px solid #1a1a1a;border-radius:12px;padding:18px 20px;margin:18px 0;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-  <p class="callout-text" style="margin:0;color:#1a1a1a;font-size:15px;font-weight:600;">${text}</p>
+export const bingoCallout = (text = 'Your registration is confirmed.') => `<div class="bingo-callout" style="background:#f9f9f9;border:2px solid #1a1a01;border-radius:12px;padding:18px 20px;margin:18px 0;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+  <p class="callout-text" style="margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;font-weight:600;">${text}</p>
 </div>`;
 
 export const primaryButton = (href, label) => `<a class="primary-button" href="${href}" style="display:inline-block;background:linear-gradient(135deg,#1a1a1a 0%,#333333 100%);color:#ffffff;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;margin:16px 0;box-shadow:0 4px 15px rgba(0,0,0,0.25);text-align:center;">${label}</a>`;
 
 export const sectionDivider = () => `<div style="height:1px;background:linear-gradient(90deg,transparent,#e5e7eb,transparent);margin:28px 0;"></div>`;
 
-export const sectionTitle = (text) => `<p class="section-title" style="font-size:20px;font-weight:700;color:#1a1a1a;margin:0 0 6px;line-height:1.3;">${text}</p>`;
+export const sectionTitle = (text) => `<p class="section-title" style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:20px;font-weight:700;margin:0 0 6px;line-height:1.3;">${text}</p>`;
 
-export const bodyText = (text) => `<p class="body-text" style="margin:0 0 16px;color:#444444;line-height:1.6;">${text}</p>`;
+export const bodyText = (text) => `<p class="body-text" style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0 0 16px;line-height:1.6;">${text}</p>`;
 
-export const smallText = (text) => `<p class="small-text" style="margin:0;font-size:12px;color:#888888;line-height:1.5;">${text}</p>`;
+export const smallText = (text) => `<p class="small-text" style="margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#888888;line-height:1.5;">${text}</p>`;

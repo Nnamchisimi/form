@@ -211,8 +211,8 @@ export const sendApprovalEmail = async (registration, customMessage, language = 
       const refLabel = isTurkish ? 'Referans No' : 'Reference No';
 
       const ticketSection = ticketImageUrl
-        ? `<div style="text-align:center;margin:24px 0 0;"><img src="${ticketImageUrl}" alt="Ticket" style="max-width:100%;height:auto;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.35);" /></div>`
-        : `<div style="width:100%;max-width:720px;border-radius:16px;overflow:hidden;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.08);background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);color:#ffffff;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+        ? `<div style="text-align:center;margin:24px 0 0;"><img src="${ticketImageUrl}" alt="Ticket" style="max-width:100%;width:720px;height:auto;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.35);" /></div>`
+        : `<div style="width:100%;max-width:720px;border-radius:16px;overflow:hidden;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.08);background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);color:#ffffff;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;aspect-ratio:720/400;">
             <div style="display:flex;">
               <div style="flex:1;background:linear-gradient(135deg,#c4b9ab 0%,#e1ddcc 50%,#fdfaf2 100%);padding:32px 32px 32px 40px;display:flex;flex-direction:column;gap:16px;">
                 <div style="display:flex;align-items:center;gap:10px;">

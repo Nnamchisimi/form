@@ -267,6 +267,8 @@ const AdminPage = ({ language, onBack, onToast }) => {
               backgroundColor: null,
               scale: 2,
               logging: false,
+              width: 720,
+              height: 400,
             });
             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
             const fileName = `${record.reference_number || 'ticket'}-${Date.now()}.png`;

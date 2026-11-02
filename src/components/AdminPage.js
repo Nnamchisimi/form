@@ -637,7 +637,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
             title={language === 'tr' ? 'Kombos Tombala Gecesi' : 'Kombos Bingo Night'}
             subtitle={language === 'tr' ? 'Davetiye' : 'Invitation'}
             referenceNumber={approvalModal.reference_number}
-            date={language === 'tr' ? '07 KASIM 2026 11:00 CUMARTESİ' : '07 NOVEMBER 2026 11:00 | SATURDAY'}
+            date={language === 'tr' ? '21 KASIM 2026 11:00 CUMARTESİ' : '21 NOVEMBER 2026 11:00 | SATURDAY'}
             location={language === 'tr' ? 'KOMBOS OTOMOTİV LEFKOŞA' : 'KOMBOS AUTOMOTIVE | LEFKOSA'}
             image={ticketImage}
             language={language}

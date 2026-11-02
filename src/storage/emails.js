@@ -231,7 +231,7 @@ export const sendApprovalEmail = async (registration, customMessage, language = 
                     <div style="display:flex;align-items:stretch;background:rgba(255,255,255,0.55);border:1px solid rgba(180,83,9,0.25);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(69,26,3,0.08);">
                       <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:14px 18px;min-width:0;">
                         <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#92400e;opacity:0.8;">${isTurkish ? 'Tarih' : 'Date'} &#128347;</span>
-                        <span style="font-size:14px;font-weight:700;color:#451a03;line-height:1.3;word-break:break-word;">${language === 'tr' ? '07 KASIM 2026 11:00 CUMARTESİ' : '07 NOVEMBER 2026 11:00 | SATURDAY'}</span>
+                        <span style="font-size:14px;font-weight:700;color:#451a03;line-height:1.3;word-break:break-word;">${language === 'tr' ? '21 KASIM 2026 11:00 CUMARTESİ' : '21 NOVEMBER 2026 11:00 | SATURDAY'}</span>
                       </div>
                       <div style="width:1px;background:linear-gradient(to bottom,transparent,rgba(180,83,9,0.35),transparent);align-self:stretch;"></div>
                       <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:14px 18px;min-width:0;">

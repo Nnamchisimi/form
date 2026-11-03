@@ -208,6 +208,7 @@ export const sendApprovalEmail = async (registration, customMessage, language = 
       const approvedText = isTurkish ? 'Kaydınız onaylandı ve teyit edildi.' : 'Your registration is approved and has been confirmed.';
       const keepRef = isTurkish ? 'Bu referans numarasını saklayın, ileride ihtiyacınız olacaktır.' : 'Please keep this reference number safe, as you will need it later.';
       const note = isTurkish ? 'Bu e-posta başka bir kayıt için kullanılamaz.' : 'Note: This email cannot be used for another registration.';
+      const pickupReminder = isTurkish ? 'Lütfen koçanınız ve davetiyeniz ile birlikte etkinlikten önce showroomlarımızdan tombala biletinizi almayı unutmayın.' : 'Please remember to pick up your tombala ticket from one of our showrooms before the event, bringing along your car registration paper and invitation.';
       const refLabel = isTurkish ? 'Referans No' : 'Reference No';
 
       const ticketSection = ticketImageUrl
@@ -274,6 +275,7 @@ export const sendApprovalEmail = async (registration, customMessage, language = 
             ${customMessage ? sectionDivider() : ''}
             ${bodyText(keepRef)}
             ${bodyText(note)}
+            ${bodyText(pickupReminder)}
             ${registration.reference_number ? sectionDivider() + highlightBox(`<p style="margin:0 0 6px;color:#1a1a1a;"><strong>${refLabel}:</strong> ${registration.reference_number}</p>`) : ''}
             ${sectionDivider()}
             ${ticketSection}

@@ -634,11 +634,11 @@ const AdminPage = ({ language, onBack, onToast }) => {
       <div ref={ticketCaptureRef} style={{ position: 'fixed', left: '-9999px', top: 0, zIndex: -1 }}>
         {approvalModal && (
           <Ticket
-            title={language === 'tr' ? 'Kombos Tombala Gecesi' : 'Kombos Bingo Night'}
+            title={language === 'tr' ? 'Kombos Tombala' : 'Kombos Bingo'}
             subtitle={language === 'tr' ? 'Davetiye' : 'Invitation'}
             referenceNumber={approvalModal.reference_number}
             date={language === 'tr' ? '21 KASIM 2026 11:00 CUMARTESİ' : '21 NOVEMBER 2026 11:00 | SATURDAY'}
-            location={language === 'tr' ? 'KOMBOS OTOMOTİV LEFKOŞA' : 'KOMBOS AUTOMOTIVE | LEFKOSA'}
+            location={language === 'tr' ? 'KOMBOS OTOMOTIV SHOWROOM' : 'KOMBOS AUTOMOTIVE | SHOWROOM'}
             image={ticketImage}
             language={language}
           />

@@ -54,11 +54,14 @@ const Ticket = ({ title, subtitle, referenceNumber, date, location, image, langu
             {date && (
               <>
                 <div className="ticket-footer-note">
-                  {isTurkish ? '* Davetiyeniz ile birlikte showroomlarımızdan tombala biletinizi tombala gecesinden önce temin etmeyi unutmayın.' : '*Please don\'t forget to collect your tombola ticket from our showrooms'}
+                  {isTurkish ? '* Davetiyeniz ile birlikte showroomlarımızdan tombala biletinizi temin etmeyi unutmayın.' : '*Please don\'t forget to collect your tombola ticket from our showrooms'}
                 </div>
                 <div className="ticket-footer-phone">
                   <PhoneIcon sx={{ fontSize: 14, verticalAlign: 'middle' }} />
                   {isTurkish ? '0533 871 38 38' : '0533 871 38 38'}
+                </div>
+                <div className="ticket-address">
+                  {isTurkish ? 'Dr Fazıl küçük Bulvarı Organıze Sanayi Bölgesi/Lefkoşa' : 'Dr Fazıl küçük Bulvarı Organıze Sanayi Bölgesi/Lefkoşa'}
                 </div>
               </>
             )}

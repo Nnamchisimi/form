@@ -225,7 +225,7 @@ export const sendApprovalEmail = async (registration, customMessage, language = 
                 </div>
                 <div style="width:100%;height:1px;background:linear-gradient(90deg,rgba(120,53,15,0.2) 0%,rgba(120,53,15,0.08) 100%);"></div>
                  <div style="display:flex;flex-direction:column;gap:8px;">
-                  <div style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:24px;font-weight:700;line-height:1.2;letter-spacing:-0.02em;color:#451a03;margin:0;word-break:break-word;">${isTurkish ? 'Kombos Tombala Gecesi' : 'Kombos Bingo Night'}</div>
+                   <div style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:24px;font-weight:700;line-height:1.2;letter-spacing:-0.02em;color:#451a03;margin:0;word-break:break-word;">${isTurkish ? 'Kombos Tombala' : 'Kombos Bingo'}</div>
                   <div style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:16px;font-weight:600;line-height:1.4;color:#92400e;margin:4px 0 0;">${isTurkish ? 'Davetiye' : 'Invitation'}</div>
                   <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:#5c4033;line-height:1.6;margin:0;letter-spacing:-0.01em;">${isTurkish ? 'Tombalaya kaydınız tamamlanmış ve onaylanmıştır.' : 'Your registration for the tombola has been successfully completed and confirmed.'}</p>
                   <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:#5c4033;line-height:1.6;margin:0;letter-spacing:-0.01em;">${isTurkish ? 'Lütfen biletinizi showroomlarımızdan temin etmeniz gerekmektedir.' : 'Please collect your ticket from our showrooms.'}</p>
@@ -256,7 +256,7 @@ export const sendApprovalEmail = async (registration, customMessage, language = 
               <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#888888;margin:0;">Use your browser's print function to save or print this ticket.</p>
             </div>
             <div style="text-align:center;margin-top:8px;">
-              <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#6b4c35;line-height:1.5;letter-spacing:-0.01em;margin:0;">${isTurkish ? '* Davetiyeniz ile birlikte showroomlarımızdan tombala biletinizi tombala gecesinden önce temin etmeyi unutmayın.' : '*Please don\'t forget to collect your tombola ticket from our showrooms'}</p>
+              <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#6b4c35;line-height:1.5;letter-spacing:-0.01em;margin:0;">${isTurkish ? '* Davetiyeniz ile birlikte showroomlarımızdan tombala biletinizi temin etmeyi unutmayın.' : '*Please don\'t forget to collect your tombola ticket from our showrooms'}</p>
             </div>
             <div style="text-align:right;margin-top:4px;">
               <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#6b4c35;line-height:1.5;letter-spacing:-0.01em;margin:0;"><span style="font-size:12px;">&#128222;</span> ${isTurkish ? '0533 871 38 38' : '0533 871 38 38'}</p>

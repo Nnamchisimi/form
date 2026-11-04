@@ -113,14 +113,15 @@
   letter-spacing: -0.01em;
 }
 
-.ticket-footer-phone {
+.ticket-address {
   font-size: 12px;
   color: #6b4c35;
-  line-height: 1.5;
+  line-height: 1.4;
   margin: 12px 0 0;
-  text-align: right;
+  text-align: center;
   word-break: break-word;
   letter-spacing: -0.01em;
+  font-style: italic;
 }
 
 .ticket-details-box {

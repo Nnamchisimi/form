@@ -236,8 +236,8 @@ export const sendApprovalEmail = async (registration, customMessage, language = 
                       </div>
                       <div style="width:1px;background:linear-gradient(to bottom,transparent,rgba(180,83,9,0.35),transparent);align-self:stretch;"></div>
                       <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:14px 18px;min-width:0;">
-                        <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#92400e;opacity:0.8;">${isTurkish ? 'Konum' : 'Location'}</span>
-                        <span style="font-size:14px;font-weight:700;color:#451a03;line-height:1.3;word-break:break-word;">${language === 'tr' ? 'KOMBOS OTOMOTİV LEFKOŞA' : 'KOMBOS AUTOMOTIVE | LEFKOSA'}</span>
+                       <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#92400e;opacity:0.8;">${isTurkish ? 'Konum' : 'Location'}</span>
+                         <span style="font-size:14px;font-weight:700;color:#451a03;line-height:1.3;word-break:break-word;">${language === 'tr' ? 'KOMBOS OTOMOTİV LEFKOŞA SHOWROOM' : 'KOMBOS AUTOMOTIVE | LEFKOŞA SHOWROOM'}</span>
                       </div>
                      <div style="width:1px;background:linear-gradient(to bottom,transparent,rgba(180,83,9,0.35),transparent);align-self:stretch;"></div>
                      <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:14px 18px;min-width:0;">
@@ -260,6 +260,9 @@ export const sendApprovalEmail = async (registration, customMessage, language = 
             </div>
             <div style="text-align:right;margin-top:4px;">
               <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#6b4c35;line-height:1.5;letter-spacing:-0.01em;margin:0;"><span style="font-size:12px;">&#128222;</span> ${isTurkish ? '0533 871 38 38' : '0533 871 38 38'}</p>
+            </div>
+            <div style="text-align:center;margin-top:4px;">
+              <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#6b4c35;line-height:1.5;letter-spacing:-0.01em;margin:0;">${isTurkish ? 'Dr Fazıl küçük Bulvarı Organıze Sanayi Bölgesi/Lefkoşa' : 'Dr Fazıl küçük Bulvarı Organıze Sanayi Bölgesi/Lefkoşa'}</p>
             </div>`;
 
       const { error: emailError } = await supabase.functions.invoke('rapid-service', {

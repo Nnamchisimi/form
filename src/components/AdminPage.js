@@ -638,7 +638,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
             subtitle={language === 'tr' ? 'Davetiye' : 'Invitation'}
             referenceNumber={approvalModal.reference_number}
             date={language === 'tr' ? '21 KASIM 2026 11:00 CUMARTESİ' : '21 NOVEMBER 2026 11:00 | SATURDAY'}
-            location={language === 'tr' ? 'KOMBOS OTOMOTIV SHOWROOM' : 'KOMBOS AUTOMOTIVE | SHOWROOM'}
+            location={language === 'tr' ? 'KOMBOS OTOMOTIV LEFKOŞA SHOWROOM' : 'KOMBOS AUTOMOTIVE | LEFKOŞA SHOWROOM'}
             image={ticketImage}
             language={language}
           />

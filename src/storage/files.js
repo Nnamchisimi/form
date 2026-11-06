@@ -56,18 +56,13 @@ export const uploadTicketImage = async (blob, fileName) => {
 export const getTicketImageUrl = async (path) => {
   if (!path) return null;
   try {
-    const { data, error } = await supabase.storage
+    const { data } = supabase.storage
       .from('receipts')
-      .createSignedUrl(path, 604800);
+      .getPublicUrl(path);
 
-    if (error) {
-      console.error('Error creating signed URL for ticket image', path, ':', error);
-      return null;
-    }
-
-    return data?.signedUrl || null;
+    return data?.publicUrl || null;
   } catch (error) {
-    console.error('Error creating signed URL for ticket image', path, ':', error);
+    console.error('Error getting public URL for ticket image', path, ':', error);
     return null;
   }
 };

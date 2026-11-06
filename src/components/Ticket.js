@@ -31,7 +31,7 @@ const Ticket = ({ title, subtitle, referenceNumber, date, location, image, langu
             {subtitle && <p className="ticket-subtitle">{subtitle}</p>}
              {date && (
               <>
-                <p className="ticket-subtext">{isTurkish ? 'Tombalaya kaydınız tamamlanmış ve onaylanmıştır.' : 'Your registration 'Dr Fazıl küçük Bulvarı Organıze Sanayi Bölgesi/Lefkoşa' for the tombola has been successfully completed and confirmed.'}</p>
+                <p className="ticket-subtext">{isTurkish ? 'Tombalaya kaydınız tamamlanmış ve onaylanmıştır.' : 'Your registration Dr Fazıl küçük Bulvarı Organıze Sanayi Bölgesi/Lefkoşa for the tombola has been successfully completed and confirmed.'}</p>
                 <p className="ticket-subtext">{isTurkish ? 'Lütfen biletinizi showroomlarımızdan temin etmeniz gerekmektedir.' : 'Please collect your ticket from our showrooms.'}</p>
               </>
             )}

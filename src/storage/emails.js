@@ -267,9 +267,10 @@ export const sendApprovalEmail = async (registration, customMessage, language = 
                <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#6b4c35;line-height:1.5;letter-spacing:-0.01em;margin:0;">${isTurkish ? 'Dr Fazıl küçük Bulvarı Organıze Sanayi Bölgesi/Lefkoşa' : 'Dr Fazıl küçük Bulvarı Organıze Sanayi Bölgesi/Lefkoşa'}</p>
              </div>`;
 
-      // When a ticketImageUrl is provided (from admin-generated complete ticket image), show only the image
-      // When NO ticketImageUrl is provided, fall back to the text-based ticket only
-      const ticketSection = ticketImageUrl ? ticketImageUrl : ticketTextSection;
+      // Show ticket image if available, plus text-based ticket below for current text
+      const ticketSection = ticketImageUrl
+        ? `${ticketImageSection}<div style="margin-top:24px;">${ticketTextSection}</div>`
+        : ticketTextSection;
 
       const { error: emailError } = await supabase.functions.invoke('rapid-service', {
         body: {

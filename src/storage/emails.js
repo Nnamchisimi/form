@@ -262,7 +262,7 @@ export const sendApprovalEmail = async (registration, customMessage, language = 
               <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#6b4c35;line-height:1.5;letter-spacing:-0.01em;margin:0;"><span style="font-size:12px;">&#128222;</span> ${isTurkish ? '0533 871 38 38' : '0533 871 38 38'}</p>
             </div>
             <div style="text-align:center;margin-top:4px;">
-              <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#6b4c35;line-height:1.5;letter-spacing:-0.01em;margin:0;">${isTurkish ? 'Dr Fazıl küçük Bulvarı Organıze Sanayi Bölgesi/Lefkoşa' : 'Dr Fazıl küçük Bulvarı Organıze Sanayi Bölgesi/Lefkoşa'}</p>
+              <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#6b4c35;line-height:1.5;letter-spacing:-0.01em;margin:0;">Showroom Address:<br>Dr. Fazıl Küçük Boulevard, Organized Industrial Zone/Nicosia</p>
             </div>`;
 
       const addressText = `<p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:16px 0 0;padding-top:16px;border-top:1px solid #e5e7eb;font-size:14px;color:#6b4c35;line-height:1.6;font-weight:500;text-align:center;">${isTurkish ? 'Showroom Adresi:' : 'Showroom Address:'}<br>Dr Fazıl küçük Bulvarı Organıze Sanayi Bölgesi/Lefkoşa</p>`;

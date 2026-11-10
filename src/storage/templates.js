@@ -41,18 +41,20 @@ export const baseEmailTemplate = (title, bodyContent) => `<!DOCTYPE html>
       .event-badge span:first-child { background: #1a1a1a !important; }
     }
     @media (min-width: 641px) {
-      .email-card { max-width: 680px !important; margin: 32px auto !important; }
-      .email-body { padding: 40px 48px !important; font-size: 16px !important; line-height: 1.8 !important; }
-      .section-title { font-size: 22px !important; margin-bottom: 10px !important; }
-      .body-text { font-size: 16px !important; margin-bottom: 20px !important; }
-      .bingo-callout { padding: 22px 28px !important; border-radius: 16px !important; }
-      .callout-text { font-size: 16px !important; }
-      .highlight-box { padding: 22px 28px !important; border-radius: 0 16px 16px 0 !important; }
-      .reference-box { padding: 22px 28px !important; border-radius: 16px !important; }
-      .reference-value { font-size: 28px !important; }
-      .primary-button { padding: 16px 36px !important; font-size: 15px !important; border-radius: 12px !important; }
-      .event-badge { font-size: 14px !important; padding: 12px 28px !important; border-radius: 30px !important; }
-      .footer { padding: 24px 48px !important; font-size: 12px !important; }
+      .email-card { max-width: 600px !important; margin: 32px auto !important; }
+      .email-header { padding: 24px 32px !important; }
+      .email-header img { max-height: 56px !important; max-width: 160px !important; }
+      .email-body { padding: 32px 40px !important; font-size: 15px !important; line-height: 1.7 !important; }
+      .section-title { font-size: 20px !important; margin-bottom: 8px !important; }
+      .body-text { font-size: 15px !important; margin-bottom: 16px !important; line-height: 1.7 !important; }
+      .bingo-callout { padding: 18px 24px !important; border-radius: 12px !important; }
+      .callout-text { font-size: 15px !important; }
+      .highlight-box { padding: 18px 24px !important; border-radius: 0 12px 12px 0 !important; }
+      .reference-box { padding: 18px 24px !important; border-radius: 12px !important; }
+      .reference-value { font-size: 24px !important; }
+      .primary-button { padding: 14px 32px !important; font-size: 14px !important; border-radius: 10px !important; }
+      .event-badge { font-size: 13px !important; padding: 10px 24px !important; border-radius: 25px !important; }
+      .footer { padding: 20px 40px !important; font-size: 11px !important; }
     }
     @media (max-width: 640px) {
       body { background-color: #f5f5f5 !important; }

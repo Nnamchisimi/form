@@ -280,7 +280,6 @@ export const sendApprovalEmail = async (registration, customMessage, language = 
             ${bodyText(keepRef)}
             ${bodyText(note)}
             ${bodyText(pickupReminder)}
-            ${addressText}
             ${registration.reference_number ? highlightBox(`<p style="margin:0 0 6px;color:#1a1a1a;"><strong>${refLabel}:</strong> ${registration.reference_number}</p>`) : ''}
             ${ticketSection}
             ${addressAfterTicket}

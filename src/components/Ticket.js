@@ -1,7 +1,7 @@
 import React from 'react';
 import './Ticket.css';
 import mercedesLogo from '../merclogo.webp';
-import { Schedule as CalendarIcon, Phone as PhoneIcon, ConfirmationNumber as RefIcon } from '@mui/icons-material';
+import { Schedule as CalendarIcon, Phone as PhoneIcon, ConfirmationNumber as RefIcon, LocationOn as LocationIcon } from '@mui/icons-material';
 
 const Ticket = ({ title, subtitle, referenceNumber, date, location, image, language = 'tr' }) => {
   const isTurkish = language === 'tr';
@@ -61,6 +61,7 @@ const Ticket = ({ title, subtitle, referenceNumber, date, location, image, langu
                   {isTurkish ? '0533 871 38 38' : '0533 871 38 38'}
                 </div>
                 <div className="ticket-address">
+                  <LocationIcon sx={{ fontSize: 14, verticalAlign: 'middle', mr: 0.5 }} />
                   {isTurkish ? 'Dr Fazıl küçük Bulvarı Organıze Sanayi Bölgesi/Lefkoşa' : 'Dr Fazıl küçük Bulvarı Organıze Sanayi Bölgesi/Lefkoşa'}
                 </div>
               </>

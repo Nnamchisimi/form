@@ -88,9 +88,9 @@ export const baseEmailTemplate = (title, bodyContent) => `<!DOCTYPE html>
 </html>`;
 
 export const eventBadge = (isTurkish = false) => `<div style="text-align:center;margin-bottom:24px;">
-  <span class="event-badge" style="display:inline-flex;align-items:center;gap:8px;padding:10px 24px;border-radius:25px;font-size:13px;font-weight:700;letter-spacing:0.8px;">
-    <span style="width:8px;height:8px;border-radius:50%;display:inline-block;opacity:0.9;"></span>
-    <font style="color:inherit !important;">${isTurkish ? 'Kombos Otomotiv Tombala' : 'Kombos Otomotiv Bingo'}</font>
+  <span class="event-badge" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#4b5563 0%,#374151 100%);color:#ffffff;padding:10px 24px;border-radius:25px;font-size:13px;font-weight:700;letter-spacing:0.8px;box-shadow:0 4px 15px rgba(0,0,0,0.15);">
+    <span style="width:8px;height:8px;background:#ffffff;border-radius:50%;display:inline-block;opacity:0.9;"></span>
+    <font style="color:#ffffff !important;">${isTurkish ? 'Kombos Otomotiv Tombala' : 'Kombos Otomotiv Bingo'}</font>
   </span>
 </div>`;
 

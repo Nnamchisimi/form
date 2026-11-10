@@ -36,6 +36,10 @@ export const baseEmailTemplate = (title, bodyContent) => `<!DOCTYPE html>
       .bingo-callout { background-color: #1f2937 !important; border-color: #4b5563 !important; }
       .callout-text { color: #ffffff !important; }
     }
+    @media (prefers-color-scheme: light) {
+      .event-badge { background: linear-gradient(135deg, #f5f5f5 0%, #e5e5e5 100%) !important; color: #1a1a1a !important; box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important; }
+      .event-badge span:first-child { background: #1a1a1a !important; }
+    }
     @media (max-width: 640px) {
       body { background-color: #f5f5f5 !important; }
       .email-card { background-color: #ffffff !important; box-shadow: none !important; }
@@ -84,9 +88,9 @@ export const baseEmailTemplate = (title, bodyContent) => `<!DOCTYPE html>
 </html>`;
 
 export const eventBadge = (isTurkish = false) => `<div style="text-align:center;margin-bottom:24px;">
-  <span class="event-badge" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1a01 0%,#333333 100%);color:#ffffff;padding:10px 24px;border-radius:25px;font-size:13px;font-weight:700;letter-spacing:0.8px;box-shadow:0 4px 15px rgba(0,0,0,0.2);">
-    <span style="width:8px;height:8px;background:#ffffff;border-radius:50%;display:inline-block;opacity:0.9;"></span>
-    <font color="#ffffff" style="color:#ffffff !important;">${isTurkish ? 'Kombos Otomotiv Tombala' : 'Kombos Otomotiv Bingo'}</font>
+  <span class="event-badge" style="display:inline-flex;align-items:center;gap:8px;padding:10px 24px;border-radius:25px;font-size:13px;font-weight:700;letter-spacing:0.8px;">
+    <span style="width:8px;height:8px;border-radius:50%;display:inline-block;opacity:0.9;"></span>
+    <font style="color:inherit !important;">${isTurkish ? 'Kombos Otomotiv Tombala' : 'Kombos Otomotiv Bingo'}</font>
   </span>
 </div>`;
 

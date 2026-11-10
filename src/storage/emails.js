@@ -265,6 +265,11 @@ export const sendApprovalEmail = async (registration, customMessage, language = 
               <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#6b4c35;line-height:1.5;letter-spacing:-0.01em;margin:0;">${isTurkish ? 'Dr Fazıl küçük Bulvarı Organıze Sanayi Bölgesi/Lefkoşa' : 'Dr Fazıl küçük Bulvarı Organıze Sanayi Bölgesi/Lefkoşa'}</p>
             </div>`;
 
+      const addressSection = `<div style="text-align:center;margin:20px 0 0;padding:16px;background:#f9f9f9;border-radius:12px;border:1px solid #e5e7eb;">
+            <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;color:#6b4c35;line-height:1.5;margin:0;font-weight:500;">${isTurkish ? 'Showroom Adresi:' : 'Showroom Address:'}</p>
+            <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:#451a03;line-height:1.5;margin:8px 0 0;font-weight:600;">Dr Fazıl küçük Bulvarı Organıze Sanayi Bölgesi/Lefkoşa</p>
+          </div>`;
+      
       const { error: emailError } = await supabase.functions.invoke('rapid-service', {
         body: {
           to: registration.email,
@@ -275,12 +280,11 @@ export const sendApprovalEmail = async (registration, customMessage, language = 
             ${sectionTitle(greeting)}
             ${bingoCallout(approvedText)}
             ${customMessage ? bodyText(customMessage.replace(/\n/g, '</p><p style="margin:0 0 16px;color:#444444;">')) : ''}
-            ${customMessage ? sectionDivider() : ''}
             ${bodyText(keepRef)}
             ${bodyText(note)}
             ${bodyText(pickupReminder)}
-            ${registration.reference_number ? sectionDivider() + highlightBox(`<p style="margin:0 0 6px;color:#1a1a1a;"><strong>${refLabel}:</strong> ${registration.reference_number}</p>`) : ''}
-            ${sectionDivider()}
+            ${registration.reference_number ? highlightBox(`<p style="margin:0 0 6px;color:#1a1a1a;"><strong>${refLabel}:</strong> ${registration.reference_number}</p>`) : ''}
+            ${addressSection}
             ${ticketSection}
           `)
         }

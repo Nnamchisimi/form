@@ -32,7 +32,7 @@ const Ticket = ({ title, subtitle, referenceNumber, date, location, image, langu
              {date && (
               <>
                 <p className="ticket-subtext">{isTurkish ? 'Tombalaya kaydınız tamamlanmış ve onaylanmıştır.' : 'Your registration for the tombola has been successfully completed and confirmed.'}</p>
-                <p className="ticket-subtext" style={{ fontWeight: 700 }}>{isTurkish ? 'Lütfen biletinizi showroomlarımızdan temin etmeniz gerekmektedir.' : 'Please collect your ticket from our showrooms.'}</p>
+                <p className="ticket-subtext" style={{ fontWeight: 700 }}>{isTurkish ? 'Lütfen biletinizi showroomlarımızdan temin etmeniz gerekmektedir.' : 'Please collect your ticket from our showroom.'}</p>
               </>
             )}
             <div className="ticket-details-box">

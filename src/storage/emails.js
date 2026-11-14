@@ -211,59 +211,68 @@ export const sendApprovalEmail = async (registration, customMessage, language = 
       const pickupReminder = isTurkish ? 'Lütfen koçanınız ve davetiyeniz ile birlikte etkinlikten önce showroomlarımızdan tombala biletinizi almayı unutmayın.' : 'Please remember to pick up your tombala ticket from our showroom at the address below before the event, bringing along your car registration paper and invitation.';
       const refLabel = isTurkish ? 'Referans No' : 'Reference No';
 
+      const ticketTitle = isTurkish ? 'Kombos Tombala' : 'Kombos Bingo';
+      const ticketSubtitle = isTurkish ? 'Davetiye' : 'Invitation';
+      const ticketDate = language === 'tr' ? '21 KASIM 2026 11:00 CUMARTESİ' : '21 NOVEMBER 2026 11:00 | SATURDAY';
+      const ticketLocation = language === 'tr' ? 'KOMBOS OTOMOTİV LEFKOŞA SHOWROOM' : 'KOMBOS AUTOMOTIVE | LEFKOŞA SHOWROOM';
+      const dateLabel = isTurkish ? 'Tarih' : 'Date';
+      const locationLabel = isTurkish ? 'Konum' : 'Location';
+      const refShort = 'REF';
+
       const ticketSection = ticketImageUrl
-        ? `<div style="text-align:center;margin:24px 0 0;"><img src="${ticketImageUrl}" alt="Ticket" style="max-width:100%;width:720px;height:auto;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.35);" /></div>`
-        : `<div style="width:100%;max-width:720px;border-radius:16px;overflow:hidden;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.08);background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);color:#ffffff;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;aspect-ratio:720/400;">
-            <div style="display:flex;">
-              <div style="flex:1;background:linear-gradient(135deg,#c4b9ab 0%,#e1ddcc 50%,#fdfaf2 100%);padding:32px 32px 32px 40px;display:flex;flex-direction:column;gap:16px;">
-                <div style="display:flex;align-items:center;gap:10px;">
-                  <img src="${LOGO_URL}" alt="Mercedes" style="width:36px;height:36px;object-fit:contain;filter:brightness(0) invert(1);" />
-                <div style="display:flex;flex-direction:column;gap:2px;">
-                  <span style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:20px;font-weight:700;letter-spacing:0.5px;color:#78350f;">Serhan Kombos</span>
-                  <span style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;color:#6b4c35;">OTOMOTIV</span>
-                </div>
-                </div>
-                <div style="width:100%;height:1px;background:linear-gradient(90deg,rgba(120,53,15,0.2) 0%,rgba(120,53,15,0.08) 100%);"></div>
-                 <div style="display:flex;flex-direction:column;gap:8px;">
-                   <div style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:24px;font-weight:700;line-height:1.2;letter-spacing:-0.02em;color:#451a03;margin:0;word-break:break-word;">${isTurkish ? 'Kombos Tombala' : 'Kombos Bingo'}</div>
-                  <div style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:16px;font-weight:600;line-height:1.4;color:#92400e;margin:4px 0 0;">${isTurkish ? 'Davetiye' : 'Invitation'}</div>
-                  <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:#5c4033;line-height:1.6;margin:0;letter-spacing:-0.01em;">${isTurkish ? 'Tombalaya kaydınız tamamlanmış ve onaylanmıştır.' : 'Your registration for the tombola has been successfully completed and confirmed.'}</p>
-                  <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:#5c4033;line-height:1.6;margin:0;letter-spacing:-0.01em;font-weight:700;">${isTurkish ? 'Lütfen biletinizi showroomlarımızdan temin etmeniz gerekmektedir.' : 'Please collect your ticket from our showrooms.'}</p>
-                    <div style="display:flex;align-items:stretch;background:rgba(255,255,255,0.55);border:1px solid rgba(180,83,9,0.25);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(69,26,3,0.08);">
-                      <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:14px 18px;min-width:0;">
-                        <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#92400e;opacity:0.8;">${isTurkish ? 'Tarih' : 'Date'} &#128347;</span>
-                        <span style="font-size:14px;font-weight:700;color:#451a03;line-height:1.3;word-break:break-word;">${language === 'tr' ? '21 KASIM 2026 11:00 CUMARTESİ' : '21 NOVEMBER 2026 11:00 | SATURDAY'}</span>
-                      </div>
-                      <div style="width:1px;background:linear-gradient(to bottom,transparent,rgba(180,83,9,0.35),transparent);align-self:stretch;"></div>
-                      <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:14px 18px;min-width:0;">
-                       <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#92400e;opacity:0.8;">${isTurkish ? 'Konum' : 'Location'}</span>
-                         <span style="font-size:14px;font-weight:700;color:#451a03;line-height:1.3;word-break:break-word;">${language === 'tr' ? 'KOMBOS OTOMOTİV LEFKOŞA SHOWROOM' : 'KOMBOS AUTOMOTIVE | LEFKOŞA SHOWROOM'}</span>
-                      </div>
-                     <div style="width:1px;background:linear-gradient(to bottom,transparent,rgba(180,83,9,0.35),transparent);align-self:stretch;"></div>
-                     <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:14px 18px;min-width:0;">
-                        <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#92400e;opacity:0.8;">REF &#35;</span>
-                       <span style="font-size:14px;font-weight:700;color:#451a03;line-height:1.3;word-break:break-all;">${registration.reference_number || 'KOMBOS-2026'}</span>
-                     </div>
-                   </div>
-                 </div>
-               </div>
-               <div style="width:220px;background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
-                 <img src="https://urtmleicijluwonalidr.supabase.co/storage/v1/object/public/logos/ticketimg.jpg" alt="Ticket" style="width:100%;height:100%;object-fit:cover;display:block;" />
-               </div>
-             </div>
-           </div>
-            <div style="text-align:center;margin:20px 0 0;">
-              <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#888888;margin:0;">Use your browser's print function to save or print this ticket.</p>
-            </div>
-            <div style="text-align:center;margin-top:8px;">
-              <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#6b4c35;line-height:1.5;letter-spacing:-0.01em;margin:0;">${isTurkish ? '* Davetiyeniz ile birlikte showroomlarımızdan tombala biletinizi temin etmeyi unutmayın.' : '*Please don\'t forget to collect your tombola ticket from our showrooms'}</p>
-            </div>
-            <div style="text-align:right;margin-top:4px;">
-              <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#6b4c35;line-height:1.5;letter-spacing:-0.01em;margin:0;"><span style="font-size:12px;">&#128222;</span> ${isTurkish ? '0533 871 38 38' : '0533 871 38 38'}</p>
-            </div>
-<div style="text-align:center;margin-top:4px;">
-              <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#6b4c35;line-height:1.5;letter-spacing:-0.01em;margin:0;">Showroom Address:<br>Dr. Fazıl Küçük Boulevard, Organized Industrial Zone/Nicosia</p>
-            </div>`;
+        ? `<div style="text-align:center;margin:24px 0 0;"><img src="${ticketImageUrl}" alt="Ticket" style="max-width:100%;width:720px;height:auto;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.35);display:block;margin:0 auto;" /></div>`
+        : `<div style="margin:24px 0 0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;max-width:720px;margin:0 auto;border-collapse:separate;border-spacing:0;border-radius:16px;overflow:hidden;background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);box-shadow:0 20px 60px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.08);">
+              <tr>
+                <td valign="top" style="padding:32px 32px 32px 40px;background:linear-gradient(135deg,#c4b9ab 0%,#e1ddcc 50%,#fdfaf2 100%);">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+                    <tr>
+                      <td style="padding:0 0 16px 0;">
+                        <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                          <td valign="middle" style="padding:0 10px 0 0;"><img src="${LOGO_URL}" alt="Mercedes" width="36" height="36" style="width:36px;height:36px;display:block;object-fit:contain;" /></td>
+                          <td valign="middle" style="line-height:1.2;">
+                            <div style="font-size:20px;font-weight:700;letter-spacing:0.5px;color:#78350f;">Serhan Kombos</div>
+                            <div style="font-size:11px;font-weight:600;letter-spacing:2px;color:#6b4c35;">OTOMOTIV</div>
+                          </td>
+                        </tr></table>
+                      </td>
+                    </tr>
+                    <tr><td style="padding:0 0 16px 0;"><div style="width:100%;height:1px;background:linear-gradient(90deg,rgba(120,53,15,0.2) 0%,rgba(120,53,15,0.08) 100%);font-size:0;line-height:0;">&nbsp;</div></td></tr>
+                    <tr><td style="padding:0;">
+                      <div style="font-size:24px;font-weight:700;line-height:1.2;letter-spacing:-0.02em;color:#451a03;margin:0 0 4px 0;">${ticketTitle}</div>
+                      <div style="font-size:16px;font-weight:600;line-height:1.4;color:#92400e;margin:4px 0 8px 0;">${ticketSubtitle}</div>
+                      <div style="font-size:14px;color:#5c4033;line-height:1.6;margin:0 0 0 0;letter-spacing:-0.01em;">${isTurkish ? 'Tombalaya kaydınız tamamlanmış ve onaylanmıştır.' : 'Your registration for the tombola has been successfully completed and confirmed.'}</div>
+                      <div style="font-size:14px;color:#5c4033;line-height:1.6;margin:0 0 8px 0;font-weight:700;letter-spacing:-0.01em;">${isTurkish ? 'Lütfen biletinizi showroomlarımızdan temin etmeniz gerekmektedir.' : 'Please collect your ticket from our showrooms.'}</div>
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;border-spacing:0;background:rgba(255,255,255,0.55);border:1px solid rgba(180,83,9,0.25);border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(69,26,3,0.08);margin:8px 0 0 0;">
+                        <tr>
+                          <td valign="top" style="padding:14px 18px;width:33%;min-width:0;">
+                            <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#92400e;opacity:0.8;margin:0 0 4px 0;">${dateLabel} &#128197;</div>
+                            <div style="font-size:14px;font-weight:700;color:#451a03;line-height:1.3;word-break:break-word;">${ticketDate}</div>
+                          </td>
+                          <td valign="top" style="width:1px;background:linear-gradient(to bottom,transparent,rgba(180,83,9,0.35),transparent);font-size:0;line-height:0;">&nbsp;</td>
+                          <td valign="top" style="padding:14px 18px;width:34%;min-width:0;">
+                            <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#92400e;opacity:0.8;margin:0 0 4px 0;">${locationLabel}</div>
+                            <div style="font-size:14px;font-weight:700;color:#451a03;line-height:1.3;word-break:break-word;">${ticketLocation}</div>
+                          </td>
+                          <td valign="top" style="width:1px;background:linear-gradient(to bottom,transparent,rgba(180,83,9,0.35),transparent);font-size:0;line-height:0;">&nbsp;</td>
+                          <td valign="top" style="padding:14px 18px;width:33%;min-width:0;">
+                            <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#92400e;opacity:0.8;margin:0 0 4px 0;">${refShort} #</div>
+                            <div style="font-size:14px;font-weight:700;color:#451a03;line-height:1.3;word-break:break-all;">${registration.reference_number || 'KOMBOS-2026'}</div>
+                          </td>
+                        </tr>
+                      </table>
+                      <div style="font-size:11px;color:#6b4c35;line-height:1.5;margin:12px 0 0 0;text-align:center;letter-spacing:-0.01em;">${isTurkish ? '* Davetiyeniz ile birlikte showroomlarımızdan tombala biletinizi temin etmeyi unutmayın.' : '*Please don\'t forget to collect your tombola ticket from our showrooms'}</div>
+                      <div style="font-size:12px;color:#6b4c35;line-height:1.4;margin:12px 0 0 0;text-align:right;letter-spacing:-0.01em;">&#128222; 0533 871 38 38</div>
+                      <div style="font-size:12px;color:#6b4c35;line-height:1.4;margin:12px 0 0 0;text-align:center;font-style:italic;letter-spacing:-0.01em;">&#128205; ${isTurkish ? 'Dr Fazıl küçük Bulvarı Organıze Sanayi Bölgesi/Lefkoşa' : 'Dr Fazıl küçük Bulvarı Organıze Sanayi Bölgesi/Lefkoşa'}</div>
+                    </td></tr>
+                  </table>
+                </td>
+                <td valign="top" width="220" style="width:220px;background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);padding:0;">
+                  <img src="https://urtmleicijluwonalidr.supabase.co/storage/v1/object/public/logos/ticketimg.jpg" alt="Ticket" width="220" style="width:220px;height:100%;min-height:400px;display:block;object-fit:cover;border:0;" />
+                </td>
+              </tr>
+            </table>
+          </div>`;
       
       const addressAfterTicket = `<p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:16px 0 0;padding-top:16px;border-top:1px solid #e5e7eb;font-size:13px;color:#6b4c35;line-height:1.6;font-weight:500;text-align:center;">Showroom Adresi:<br>Dr Fazıl küçük Bulvarı Organıze Sanayi Bölgesi/Lefkoşa</p>`;
       

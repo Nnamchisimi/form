@@ -214,20 +214,6 @@ const AdminPage = ({ language, onBack, onToast }) => {
     }
   };
 
-  const handleOpenApprovalModal = (record) => {
-    setApprovalModal(record);
-    setApprovalChassis(record.chassis_number || '');
-    setApprovalMessage('');
-    setConfirmApproval(false);
-  };
-
-  const handleCloseApprovalModal = () => {
-    setApprovalModal(null);
-    setApprovalChassis('');
-    setApprovalMessage('');
-    setConfirmApproval(false);
-  };
-
   const handleOpenRejectionModal = (record) => {
     setRejectionModal(record);
   };
@@ -251,12 +237,11 @@ const AdminPage = ({ language, onBack, onToast }) => {
     if (processingRef.current.has(record.id)) {
       return;
     }
-    if (!approvalChassis.trim()) {
-      showToast(language === 'tr' ? 'Lütfen şasi numarası girin.' : 'Please enter the chassis number.', 'warning');
-      return;
-    }
     processingRef.current.add(record.id);
     try {
+      setApprovalModal(record);
+      await new Promise(resolve => setTimeout(resolve, 150));
+
       let generatedTicketUrl = null;
       if (ticketCaptureRef.current) {
         const ticketElement = ticketCaptureRef.current.querySelector('.ticket');
@@ -280,29 +265,28 @@ const AdminPage = ({ language, onBack, onToast }) => {
         }
       }
 
-      const updatedRecord = { ...record, invitation_status: 'Approved', chassis_number: approvalChassis.trim() };
+      const updatedRecord = { ...record, invitation_status: 'Approved', chassis_number: record.chassis_number || null };
       await storage.updateRegistration(record.id, {
         invitation_status: 'Approved',
-        chassis_number: approvalChassis.trim() || null
+        chassis_number: record.chassis_number || null
       });
       await storage.archiveRegistration(updatedRecord, 'Approved');
       await storage.deleteRegistration(record.id);
       try {
-        await storage.sendApprovalEmail(updatedRecord, approvalMessage.trim() || undefined, language, generatedTicketUrl);
+        await storage.sendApprovalEmail(updatedRecord, undefined, language, generatedTicketUrl);
       } catch (emailError) {
-         console.error('Approval email error:', emailError);
-       }
-        showToast(t.registrationApprovedAndArchived, 'success');
-        handleCloseApprovalModal();
-        setRecords(prev => prev.filter(r => r.id !== record.id));
-        setTicketImageUrl(null);
-        await loadArchivedRegistrations();
-        await loadRegistrations();
+        console.error('Approval email error:', emailError);
+      }
+      showToast(t.registrationApprovedAndArchived, 'success');
+      setRecords(prev => prev.filter(r => r.id !== record.id));
+      await loadArchivedRegistrations();
+      await loadRegistrations();
     } catch (error) {
       console.error('Error approving registration:', error);
       showToast('Error approving registration', 'error');
       await loadRegistrations();
     } finally {
+      setApprovalModal(null);
       processingRef.current.delete(record.id);
     }
   };
@@ -569,7 +553,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
         getStatusColor={getStatusColor}
         rejectionReasons={rejectionReasons}
         rejectionReasonOptions={rejectionReasonOptions}
-        onApprove={handleOpenApprovalModal}
+        onApprove={handleApprove}
         onOpenRejectionModal={handleOpenRejectionModal}
         onViewDocument={handleOpenDocument}
         onReasonChange={handleRejectionReasonChange}
@@ -599,7 +583,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
       />
 
       <AdminModals
-        approvalModal={approvalModal}
+        approvalModal={null}
         rejectionModal={rejectionModal}
         documentViewer={documentViewer}
         reminderModal={reminderModal}
@@ -618,10 +602,10 @@ const AdminPage = ({ language, onBack, onToast }) => {
         getStatusColor={getStatusColor}
         rejectionReasons={rejectionReasons}
         rejectionReasonOptions={rejectionReasonOptions}
-        onCloseApprovalModal={handleCloseApprovalModal}
+        onCloseApprovalModal={() => {}}
         onCloseRejectionModal={handleCloseRejectionModal}
         onCloseDocument={handleCloseDocument}
-        onApprove={handleApprove}
+        onApprove={() => {}}
         onArchiveRecord={handleArchiveRecord}
         onReasonChange={handleRejectionReasonChange}
         onOtherChange={handleOtherReasonChange}

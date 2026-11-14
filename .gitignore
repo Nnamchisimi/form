@@ -19,3 +19,5 @@ yarn-error.log*
 vite.config.*.timestamp*
 .vscode-test
 *.tsbuildinfo
+
+supabase/.temp/

@@ -137,7 +137,7 @@ const AdminModals = ({
                 </div>
                  <div className="form-group" style={{ marginTop: 16 }}>
                     <label htmlFor="approval-chassis" style={{ fontWeight: 600, fontSize: '0.95em' }}>
-                      {t.chassisNumber}
+                      {t.chassisNumber} <span style={{ fontWeight: 400, color: '#6b7280' }}>({language === 'en' ? 'optional' : 'isteğe bağlı'})</span>
                     </label>
                     <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
                       <input
@@ -148,17 +148,17 @@ const AdminModals = ({
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
-                            onApprove(approvalModal);
+                            setConfirmApproval(true);
                           }
                         }}
-                        placeholder={language === 'en' ? 'Enter chassis number' : 'Şasi numarası girin'}
+                        placeholder={language === 'en' ? 'Enter chassis number (optional)' : 'Şasi numarası girin (isteğe bağlı)'}
                         style={{ flex: 1, padding: 10, fontSize: 14, fontFamily: 'inherit' }}
                       />
                       <button
                         type="button"
                         className="btn-ghost"
                         onClick={() => setConfirmApproval(true)}
-                        title={language === 'en' ? 'Approve with chassis number' : 'Şasi numarasıyla onayla'}
+                        title={language === 'en' ? 'Approve registration' : 'Kaydı onayla'}
                       >
                         <Edit size={18} />
                       </button>

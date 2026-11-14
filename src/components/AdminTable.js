@@ -98,7 +98,7 @@ const AdminTable = ({
                       disabled={record.invitation_status === 'Approved' || record.invitation_status === 'Rejected' || isProcessing?.(record.id)}
                       title={t.approveRegistration}
                     >
-                      {t.approveRegistration}
+                      {isProcessing?.(record.id) ? (language === 'en' ? 'Approving...' : 'Onaylanıyor...') : t.approveRegistration}
                     </button>
                   )}
                   {!isRecordIncomplete?.(record) && (

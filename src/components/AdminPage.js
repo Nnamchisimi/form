@@ -19,6 +19,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const processingRef = useRef(new Set());
+  const [processingIds, setProcessingIds] = useState(new Set());
   const [receiptUrls, setReceiptUrls] = useState({});
   const [archivedRecords, setArchivedRecords] = useState([]);
   const [rejectionReasons, setRejectionReasons] = useState({});
@@ -238,6 +239,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
       return;
     }
     processingRef.current.add(record.id);
+    setProcessingIds(prev => new Set(prev).add(record.id));
     try {
       setApprovalModal(record);
       await new Promise(resolve => setTimeout(resolve, 150));
@@ -288,6 +290,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
     } finally {
       setApprovalModal(null);
       processingRef.current.delete(record.id);
+      setProcessingIds(prev => { const next = new Set(prev); next.delete(record.id); return next; });
     }
   };
 
@@ -563,7 +566,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
         onDeleteRegistration={handleDeleteRegistration}
         isRecordIncomplete={isRecordIncomplete}
         onSendReminder={handleSendReminder}
-        isProcessing={(id) => processingRef.current.has(id)}
+        isProcessing={(id) => processingIds.has(id)}
         currentPage={safeCurrentPage}
         totalPages={totalPages}
         goToPage={goToPage}

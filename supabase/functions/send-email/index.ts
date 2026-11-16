@@ -32,7 +32,7 @@ serve(async (req) => {
     }
 
     const data = await resend.emails.send({
-      from: from || "Serhan Kombos Otomotiv <noreply@kombosdms.com>",
+      from: from || "Serhan Kombos Otomotiv <noreply@tombala-kombosotomotiv.com>",
       to,
       subject,
       html

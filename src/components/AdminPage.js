@@ -770,7 +770,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const downloadExcel = () => {
     const dataToExport = showArchive ? archivedRecords : records;
     if (dataToExport.length === 0) return;
-    const headers = ['Name', 'Surname', 'Email', 'Phone', 'DOB', 'Vehicle Model', 'Model Year', 'License Plate', 'Chassis Number', 'Location', 'Language', 'Reference No', 'Submitted At', 'Invitation Status'];
+    const headers = ['Name', 'Surname', 'Email', 'Phone', 'DOB', 'Vehicle Model', 'Model Year', 'License Plate', 'Chassis Number', 'Location', 'Language', 'Reference No', 'Submitted At', 'Approved At', 'Invitation Status'];
     const rows = dataToExport.map(r => [
       r.name,
       r.surname,
@@ -784,7 +784,8 @@ const AdminPage = ({ language, onBack, onToast }) => {
       r.location,
       r.language || '',
       r.reference_number || '',
-      r.submitted_at,
+      r.submitted_at || '',
+      r.approved_at || '',
       r.invitation_status || 'Pending'
     ]);
     const table = `<table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${String(cell ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;

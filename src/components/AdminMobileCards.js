@@ -97,7 +97,11 @@ const AdminMobileCards = ({
             </div>
             <div className="admin-mobile-field">
               <span className="admin-mobile-field-label">{t.submittedAt}</span>
-              <span className="admin-mobile-field-value">{new Date(record.submitted_at).toLocaleString()}</span>
+              <span className="admin-mobile-field-value">{record.submitted_at ? new Date(record.submitted_at).toLocaleString() : '-'}</span>
+            </div>
+            <div className="admin-mobile-field">
+              <span className="admin-mobile-field-label">{language === 'en' ? 'Approved At' : 'Onaylanma Zamanı'}</span>
+              <span className="admin-mobile-field-value">{record.approved_at ? new Date(record.approved_at).toLocaleString() : '-'}</span>
             </div>
             {record.vehicle_stub && receiptUrls[record.id] && (
               <div className="admin-mobile-field">

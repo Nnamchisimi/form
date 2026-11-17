@@ -53,6 +53,7 @@ const AdminTable = ({
           <th>Ref No</th>
           <th>{t.language}</th>
           <th>{t.submittedAt}</th>
+          <th>{language === 'en' ? 'Approved At' : 'Onaylanma Zamanı'}</th>
           <th>{t.receiptFile || 'Car Document File'}</th>
           <th>{t.invitationStatus}</th>
           {!showArchive && <th>{t.actions}</th>}
@@ -86,7 +87,8 @@ const AdminTable = ({
           <td>{t.locations[record.location] || record.location}</td>
           <td>{record.reference_number || '-'}</td>
           <td>{getLanguageLabel(record.language)}</td>
-          <td>{new Date(record.submitted_at).toLocaleString()}</td>
+          <td>{record.submitted_at ? new Date(record.submitted_at).toLocaleString() : '-'}</td>
+          <td>{record.approved_at ? new Date(record.approved_at).toLocaleString() : '-'}</td>
             <td>
               {record.vehicle_stub && receiptUrls[record.id] ? (
                 <button

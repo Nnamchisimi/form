@@ -48,6 +48,7 @@ const AdminDashboard = ({
   isRecordIncomplete,
   onSendReminder,
   isProcessing,
+  isProcessingAny,
   currentPage,
   totalPages,
   goToPage,
@@ -168,6 +169,7 @@ const AdminDashboard = ({
                   isRecordIncomplete={isRecordIncomplete}
                   onSendReminder={onSendReminder}
                   isProcessing={isProcessing}
+                  isProcessingAny={isProcessingAny}
                 />
               </div>
 
@@ -193,6 +195,7 @@ const AdminDashboard = ({
                 isRecordIncomplete={isRecordIncomplete}
                 onSendReminder={onSendReminder}
                 isProcessing={isProcessing}
+                isProcessingAny={isProcessingAny}
               />
             </>
           )}

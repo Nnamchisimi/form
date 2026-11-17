@@ -22,7 +22,8 @@ const AdminMobileCards = ({
   isRecordIncomplete,
   onSendReminder,
   onViewDocument,
-  isProcessing
+  isProcessing,
+  isProcessingAny
 }) => {
   const getLanguageLabel = (lang) => {
     if (lang === 'tr') return 'TR';
@@ -103,16 +104,19 @@ const AdminMobileCards = ({
                     type="button"
                     className="btn-approve"
                     onClick={() => onApprove(record)}
-                    disabled={record.invitation_status === 'Approved' || record.invitation_status === 'Rejected' || isProcessing?.(record.id)}
+                    disabled={record.invitation_status === 'Approved' || record.invitation_status === 'Rejected' || isProcessing?.(record.id) || isProcessingAny}
                     title={t.approveRegistration}
+                    style={isProcessing?.(record.id) ? { position: 'relative', overflow: 'hidden' } : undefined}
                   >
                     {isProcessing?.(record.id) ? (language === 'en' ? 'Approving...' : 'Onaylanıyor...') : t.approveRegistration}
+                    {isProcessing?.(record.id) && <span style={{ position: 'absolute', left: 0, bottom: 0, height: 3, width: '100%', background: 'rgba(255,255,255,0.7)', animation: 'approvalBtnBar 1s linear infinite' }} />}
                   </button>
+                  {isProcessing?.(record.id) && <style>{`@keyframes approvalBtnBar { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }`}</style>}
                   <button
                     type="button"
                     className="btn-reject"
                     onClick={() => onOpenRejectionModal?.(record)}
-                    disabled={record.invitation_status === 'Approved' || record.invitation_status === 'Rejected' || isProcessing?.(record.id)}
+                    disabled={record.invitation_status === 'Approved' || record.invitation_status === 'Rejected' || isProcessing?.(record.id) || isProcessingAny}
                     title={t.rejectRegistration}
                   >
                     {t.rejectRegistration}
@@ -122,7 +126,7 @@ const AdminMobileCards = ({
                       type="button"
                       className="btn-send"
                       onClick={() => onResendApproval?.(record)}
-                      disabled={isProcessing?.(record.id)}
+                      disabled={isProcessing?.(record.id) || isProcessingAny}
                       title={language === 'en' ? 'Resend approval email' : 'Onay e-postasını yeniden gönder'}
                     >
                       {language === 'en' ? 'Resend Approval' : 'Onayı Yeniden Gönder'}
@@ -156,7 +160,7 @@ const AdminMobileCards = ({
                       type="button"
                       className="btn-send"
                       onClick={() => onResendApprovalArchive?.(record)}
-                      disabled={isProcessing?.(record.id)}
+                      disabled={isProcessing?.(record.id) || isProcessingAny}
                       title={language === 'en' ? 'Resend approval email' : 'Onay e-postasını yeniden gönder'}
                     >
                       {language === 'en' ? 'Resend Approval' : 'Onayı Yeniden Gönder'}

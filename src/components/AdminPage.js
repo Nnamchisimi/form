@@ -682,6 +682,7 @@ onApprove={handleApprove}
         isRecordIncomplete={isRecordIncomplete}
         onSendReminder={handleSendReminder}
         isProcessing={(id) => processingIds.has(id)}
+        isProcessingAny={isProcessingAny}
         currentPage={safeCurrentPage}
         totalPages={totalPages}
         goToPage={goToPage}
@@ -746,6 +747,18 @@ onApprove={handleApprove}
           />
         )}
       </div>
+
+      {isProcessingAny && (
+        <div style={{ position: 'fixed', left: 0, right: 0, top: 0, zIndex: 2000 }}>
+          <div style={{ height: 4, width: '100%', background: '#e5e7eb', overflow: 'hidden' }}>
+            <div className="approval-progress-bar" style={{ height: '100%', width: '40%', background: '#3b82f6' }} />
+          </div>
+          <div style={{ textAlign: 'center', fontSize: 12, padding: '6px 8px', background: 'rgba(255,255,255,0.95)', color: '#374151' }}>
+            {language === 'en' ? 'Approving, please wait...' : 'Onaylanıyor, lütfen bekleyin...'}
+          </div>
+          <style>{`@keyframes approvalProgress { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } } .approval-progress-bar { animation: approvalProgress 1.2s ease-in-out infinite; }`}</style>
+        </div>
+      )}
     </div>
   );
 };

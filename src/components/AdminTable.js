@@ -145,6 +145,7 @@ const AdminTable = ({
                     type="button"
                     className="btn-send"
                     onClick={() => onSendReminder?.(record)}
+                    disabled={isProcessing?.(record.id) || isProcessingAny}
                     title={t.sendReminder}
                   >
                     {t.sendReminder}
@@ -153,6 +154,7 @@ const AdminTable = ({
                     type="button"
                     className="btn-delete"
                     onClick={() => onDeleteRegistration?.(record)}
+                    disabled={isProcessing?.(record.id) || isProcessingAny}
                     title={t.deleteRecord}
                   >
                     <Trash size={14} style={{ marginRight: 4 }} />

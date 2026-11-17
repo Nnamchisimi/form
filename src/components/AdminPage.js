@@ -241,7 +241,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
       return;
     }
     if (isProcessingAny) {
-      showToast(language === 'en' ? 'Another approval in progress. Please wait.' : 'Başka bir onay devam ediyor. Lütfen bekleyin.', 'warning');
+      showToast(t.anotherApprovalInProgress, 'warning');
       return;
     }
     setIsProcessingAny(true);
@@ -290,7 +290,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
     // Race condition guard: use ref + check record still exists in active list
     if (processingRef.current.has(record.id)) return;
     if (isProcessingAny) {
-      showToast(language === 'en' ? 'Another approval in progress. Please wait.' : 'Başka bir onay devam ediyor. Lütfen bekleyin.', 'warning');
+      showToast(t.anotherApprovalInProgress, 'warning');
       return;
     }
     setIsProcessingAny(true);
@@ -381,7 +381,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
       return;
     }
     if (isProcessingAny) {
-      showToast(language === 'en' ? 'Another approval in progress. Please wait.' : 'Başka bir onay devam ediyor. Lütfen bekleyin.', 'warning');
+      showToast(t.anotherApprovalInProgress, 'warning');
       return;
     }
     setIsProcessingAny(true);

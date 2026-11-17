@@ -39,7 +39,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const ticketCaptureRef = useRef(null);
   const [ticketImageUrl, setTicketImageUrl] = useState(null);
   const [resendingId, setResendingId] = useState(null);
-  const [globalProcessing, setGlobalProcessing] = useState(false);
+  const [isProcessingAny, setIsProcessingAny] = useState(false);
   const itemsPerPage = 10;
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('desc');
@@ -240,9 +240,12 @@ const AdminPage = ({ language, onBack, onToast }) => {
     if (processingRef.current.has(record.id)) {
       return;
     }
-    if (globalProcessing) return; // Block if another operation in progress
+    if (isProcessingAny) {
+      showToast(language === 'en' ? 'Another approval in progress. Please wait.' : 'Başka bir onay devam ediyor. Lütfen bekleyin.', 'warning');
+      return;
+    }
+    setIsProcessingAny(true);
     processingRef.current.add(record.id);
-    setGlobalProcessing(true);
     setProcessingIds(prev => new Set(prev).add(record.id));
     try {
       setApprovalModal(record);
@@ -272,7 +275,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
       await loadRegistrations();
     } finally {
       setApprovalModal(null);
-      setGlobalProcessing(false);
+      setIsProcessingAny(false);
       processingRef.current.delete(record.id);
       setProcessingIds(prev => { const next = new Set(prev); next.delete(record.id); return next; });
     }
@@ -286,9 +289,12 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const handleResendApproval = async (record) => {
     // Race condition guard: use ref + check record still exists in active list
     if (processingRef.current.has(record.id)) return;
-    if (globalProcessing) return; // Block if another operation in progress
+    if (isProcessingAny) {
+      showToast(language === 'en' ? 'Another approval in progress. Please wait.' : 'Başka bir onay devam ediyor. Lütfen bekleyin.', 'warning');
+      return;
+    }
+    setIsProcessingAny(true);
     processingRef.current.add(record.id);
-    setGlobalProcessing(true);
     setResendingId(record.id);
     setProcessingIds(prev => new Set(prev).add(record.id));
     try {
@@ -320,7 +326,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
       setApprovalModal(null);
       setTicketImageUrl(null);
       setResendingId(null);
-      setGlobalProcessing(false);
+      setIsProcessingAny(false);
       processingRef.current.delete(record.id);
       setProcessingIds(prev => { const next = new Set(prev); next.delete(record.id); return next; });
     }
@@ -374,16 +380,19 @@ const AdminPage = ({ language, onBack, onToast }) => {
     if (processingRef.current.has(record.id)) {
       return;
     }
-    if (globalProcessing) return; // Block if another operation in progress
+    if (isProcessingAny) {
+      showToast(language === 'en' ? 'Another approval in progress. Please wait.' : 'Başka bir onay devam ediyor. Lütfen bekleyin.', 'warning');
+      return;
+    }
+    setIsProcessingAny(true);
     processingRef.current.add(record.id);
-    setGlobalProcessing(true);
     const selectedReasons = rejectionReasons[record.id] || [];
     const customReason = rejectionReasons[`${record.id}_other`] || '';
 
     if (selectedReasons.length === 0 && !customReason.trim()) {
       showToast(t.pleaseSelectRejectionReason, 'warning');
+      setIsProcessingAny(false);
       processingRef.current.delete(record.id);
-      setGlobalProcessing(false);
       return;
     }
 
@@ -419,7 +428,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
       showToast('Error archiving registration', 'error');
       await loadRegistrations();
     } finally {
-      setGlobalProcessing(false);
+      setIsProcessingAny(false);
       processingRef.current.delete(record.id);
     }
   };
@@ -737,15 +746,6 @@ onApprove={handleApprove}
           />
         )}
       </div>
-
-      {globalProcessing && (
-        <div className="global-processing-overlay">
-          <div className="global-processing-content">
-            <div className="spinner" />
-            <p>{language === 'en' ? 'Processing... Please wait' : 'İşleniyor... Lütfen bekleyin'}</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

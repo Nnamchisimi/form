@@ -402,6 +402,36 @@ const AdminPage = ({ language, onBack, onToast }) => {
         approved_at: record.approved_at || null
       };
       await storage.archiveRegistration(archivedRecord, 'Approved', true);
+
+      // Safety: verify an approved archive copy exists before removing the active record
+      let archivedOk = false;
+      try {
+        const { data: byOrig } = await supabase
+          .from('archived_registrations')
+          .select('id')
+          .eq('original_id', record.id)
+          .eq('invitation_status', 'Approved')
+          .limit(1)
+          .maybeSingle();
+        if (byOrig) archivedOk = true;
+        else if (record.reference_number) {
+          const { data: byRef } = await supabase
+            .from('archived_registrations')
+            .select('id')
+            .eq('reference_number', record.reference_number)
+            .eq('email', record.email || '')
+            .eq('invitation_status', 'Approved')
+            .limit(1)
+            .maybeSingle();
+          if (byRef) archivedOk = true;
+        }
+      } catch (_) {
+        archivedOk = false;
+      }
+      if (!archivedOk) {
+        throw new Error('Archive not verified; active record was not deleted to prevent data loss');
+      }
+
       try {
         await storage.deleteRegistration(record.id);
       } catch (delErr) {

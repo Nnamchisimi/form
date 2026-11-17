@@ -296,15 +296,20 @@ const AdminPage = ({ language, onBack, onToast }) => {
 
   // Resend the approval email for a stranded Approved row (one that was
   // approved but never archived/deleted, so its approval email never sent).
-  // Re-sends the email, then removes the stranded row so it disappears.
+  // Re-sends the email, then archives the row so it moves out of the live
+  // registration list and into the archive (where it can be re-sent again if
+  // needed) - the row is NOT deleted.
   const handleResendApproval = async (record) => {
     if (processingRef.current.has(record.id)) return;
     processingRef.current.add(record.id);
     setProcessingIds(prev => new Set(prev).add(record.id));
     try {
       await storage.sendApprovalEmail(record, undefined, language, null);
+      const archivedRecord = { ...record, invitation_status: 'Approved', chassis_number: record.chassis_number || null };
+      await storage.archiveRegistration(archivedRecord, 'Approved');
       await storage.deleteRegistration(record.id);
       setRecords(prev => prev.filter(r => r.id !== record.id));
+      await loadArchivedRegistrations();
       showToast(t.resendApprovalEmailSuccess || 'Approval email resent', 'success');
     } catch (error) {
       console.error('Error resending approval email:', error);

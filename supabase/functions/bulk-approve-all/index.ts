@@ -103,10 +103,11 @@ serve(async (req) => {
 
       console.log(`Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(registrations.length / BATCH_SIZE)}: ${batch.length} users`)
 
-      // 1. Update status to Approved
+      // 1. Update status to Approved (+ approved_at, preserving existing if present)
+      const nowIso = new Date().toISOString()
       const { error: updateError } = await supabase
         .from("registrations")
-        .update({ invitation_status: "Approved" })
+        .update({ invitation_status: "Approved", approved_at: nowIso })
         .in("id", batchIds)
 
       if (updateError) {
@@ -135,7 +136,8 @@ serve(async (req) => {
         verification_status: r.verification_status || "Pending",
         invitation_status: "Approved",
         archived_reason: "Bulk approved",
-        archived_at: new Date().toISOString(),
+        archived_at: nowIso,
+        approved_at: r.approved_at || nowIso,
         reference_number: r.reference_number,
         language: r.language || null,
       }))
@@ -165,7 +167,7 @@ serve(async (req) => {
       // 4. Send approval emails (with per-user details/ticket)
       for (const record of batch) {
         try {
-          await sendApprovalEmail({ ...record, invitation_status: "Approved" }, undefined, record.language || "tr", null)
+          await sendApprovalEmail({ ...record, invitation_status: "Approved", approved_at: record.approved_at || nowIso }, undefined, record.language || "tr", null)
           results.processed++
         } catch (emailError: any) {
           console.error(`Email failed for ${record.email}:`, emailError)

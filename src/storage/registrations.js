@@ -176,7 +176,8 @@ export const archiveRegistration = async (registration, reason = 'Rejected', isR
     invitation_status: registration.invitation_status || 'Pending',
     archived_reason: reason,
     reference_number: registration.reference_number,
-    language: registration.language || null
+    language: registration.language || null,
+    approved_at: registration.approved_at || null
   };
 
   // For resend approval (reapproval), check for existing archive by email and update it

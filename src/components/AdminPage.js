@@ -256,14 +256,17 @@ const AdminPage = ({ language, onBack, onToast }) => {
 
       const generatedTicketUrl = await generateTicketImage(record);
 
+      const approvedAt = record.approved_at || new Date().toISOString();
       const updatedRecord = {
         ...record,
         invitation_status: 'Approved',
-        chassis_number: record.chassis_number || null
+        chassis_number: record.chassis_number || null,
+        approved_at: approvedAt
       };
       await storage.updateRegistration(record.id, {
         invitation_status: 'Approved',
-        chassis_number: record.chassis_number || null
+        chassis_number: record.chassis_number || null,
+        approved_at: approvedAt
       });
       await storage.archiveRegistration(updatedRecord, 'Approved');
       await storage.deleteRegistration(record.id);
@@ -407,7 +410,12 @@ const AdminPage = ({ language, onBack, onToast }) => {
       const generatedTicketUrl = await generateTicketImage(record);
 
       await storage.sendApprovalEmail(record, undefined, language, generatedTicketUrl);
-      const archivedRecord = { ...record, invitation_status: 'Approved', chassis_number: record.chassis_number || null };
+      const archivedRecord = {
+        ...record,
+        invitation_status: 'Approved',
+        chassis_number: record.chassis_number || null,
+        approved_at: record.approved_at || null
+      };
       await storage.archiveRegistration(archivedRecord, 'Approved', true);
       setRecords(prev => prev.filter(r => r.id !== record.id));
       setSelectedIds(prev => { const next = new Set(prev); next.delete(record.id); return next; });

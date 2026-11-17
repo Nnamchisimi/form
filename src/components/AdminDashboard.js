@@ -170,6 +170,7 @@ const AdminDashboard = ({
                     className="btn-primary"
                     onClick={onBulkApproveSelected}
                     disabled={isProcessingAny || !!bulkProgress || !dataToShow.some(r => selectedIds?.has(r.id) && r.invitation_status !== 'Approved' && r.invitation_status !== 'Rejected')}
+                    style={{ flex: '0 0 auto', width: 'auto' }}
                   >
                     {language === 'en' ? 'Approve selected' : 'Seçilenleri onayla'}
                   </button>

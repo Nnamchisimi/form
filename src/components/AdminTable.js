@@ -13,6 +13,8 @@ const AdminTable = ({
   rejectionReasonOptions,
   onApprove,
   onOpenRejectionModal,
+  onResendApproval,
+  onResendApprovalArchive,
   onDeleteArchived,
   onDeleteRegistration,
   onReasonChange,
@@ -108,6 +110,17 @@ const AdminTable = ({
                   >
                     {t.rejectRegistration}
                   </button>
+                  {record.invitation_status === 'Approved' && (
+                    <button
+                      type="button"
+                      className="btn-send"
+                      onClick={() => onResendApproval?.(record)}
+                      disabled={isProcessing?.(record.id)}
+                      title={language === 'en' ? 'Resend approval email' : 'Onay e-postasını yeniden gönder'}
+                    >
+                      {language === 'en' ? 'Resend Approval' : 'Onayı Yeniden Gönder'}
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="btn-send"
@@ -120,6 +133,32 @@ const AdminTable = ({
                     type="button"
                     className="btn-delete"
                     onClick={() => onDeleteRegistration?.(record)}
+                    title={t.deleteRecord}
+                  >
+                    <Trash size={14} style={{ marginRight: 4 }} />
+                    {t.delete}
+                  </button>
+                </div>
+              </td>
+            )}
+            {showArchive && (
+              <td>
+                <div className="action-buttons-row">
+                  {record.invitation_status === 'Approved' && (
+                    <button
+                      type="button"
+                      className="btn-send"
+                      onClick={() => onResendApprovalArchive?.(record)}
+                      disabled={isProcessing?.(record.id)}
+                      title={language === 'en' ? 'Resend approval email' : 'Onay e-postasını yeniden gönder'}
+                    >
+                      {language === 'en' ? 'Resend Approval' : 'Onayı Yeniden Gönder'}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="btn-delete"
+                    onClick={() => onDeleteArchived?.(record)}
                     title={t.deleteRecord}
                   >
                     <Trash size={14} style={{ marginRight: 4 }} />

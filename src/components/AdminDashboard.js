@@ -37,6 +37,8 @@ const AdminDashboard = ({
   rejectionReasonOptions,
   onApprove,
   onOpenRejectionModal,
+  onResendApproval,
+  onResendApprovalArchive,
   onViewDocument,
   onReasonChange,
   onOtherChange,
@@ -155,6 +157,8 @@ const AdminDashboard = ({
                   rejectionReasonOptions={rejectionReasonOptions}
                   onApprove={onApprove}
                   onOpenRejectionModal={onOpenRejectionModal}
+                  onResendApproval={onResendApproval}
+                  onResendApprovalArchive={onResendApprovalArchive}
                   onViewDocument={onViewDocument}
                   onReasonChange={onReasonChange}
                   onOtherChange={onOtherChange}
@@ -178,6 +182,8 @@ const AdminDashboard = ({
                 rejectionReasonOptions={rejectionReasonOptions}
                 onApprove={onApprove}
                 onOpenRejectionModal={onOpenRejectionModal}
+                onResendApproval={onResendApproval}
+                onResendApprovalArchive={onResendApprovalArchive}
                 onViewDocument={onViewDocument}
                 onReasonChange={onReasonChange}
                 onOtherChange={onOtherChange}

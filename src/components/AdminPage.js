@@ -294,6 +294,28 @@ const AdminPage = ({ language, onBack, onToast }) => {
     }
   };
 
+  // Resend the approval email for a stranded Approved row (one that was
+  // approved but never archived/deleted, so its approval email never sent).
+  // Re-sends the email, then removes the stranded row so it disappears.
+  const handleResendApproval = async (record) => {
+    if (processingRef.current.has(record.id)) return;
+    processingRef.current.add(record.id);
+    setProcessingIds(prev => new Set(prev).add(record.id));
+    try {
+      await storage.sendApprovalEmail(record, undefined, language, null);
+      await storage.deleteRegistration(record.id);
+      setRecords(prev => prev.filter(r => r.id !== record.id));
+      showToast(t.resendApprovalEmailSuccess || 'Approval email resent', 'success');
+    } catch (error) {
+      console.error('Error resending approval email:', error);
+      showToast('Error resending approval email', 'error');
+      await loadRegistrations();
+    } finally {
+      processingRef.current.delete(record.id);
+      setProcessingIds(prev => { const next = new Set(prev); next.delete(record.id); return next; });
+    }
+  };
+
   const handleArchiveRecord = async (record) => {
     if (record.invitation_status === 'Approved' || record.invitation_status === 'Rejected') {
       return;
@@ -438,6 +460,25 @@ const AdminPage = ({ language, onBack, onToast }) => {
     }
   };
 
+  // Re-send the approval email for an archived Approved row. The archived
+  // row stays in the archive (only the registration-page resend removes the
+  // row) - this button just re-sends the email.
+  const handleResendApprovalArchive = async (record) => {
+    if (processingRef.current.has(record.id)) return;
+    processingRef.current.add(record.id);
+    setProcessingIds(prev => new Set(prev).add(record.id));
+    try {
+      await storage.sendApprovalEmail(record, undefined, language, null);
+      showToast(t.resendApprovalEmailSuccess || 'Approval email resent', 'success');
+    } catch (error) {
+      console.error('Error resending approval email for archived record:', error);
+      showToast('Error resending approval email', 'error');
+    } finally {
+      processingRef.current.delete(record.id);
+      setProcessingIds(prev => { const next = new Set(prev); next.delete(record.id); return next; });
+    }
+  };
+
   const handleDeleteRegistration = async (record) => {
     if (!window.confirm(t.deleteConfirm)) return;
     try {
@@ -556,8 +597,10 @@ const AdminPage = ({ language, onBack, onToast }) => {
         getStatusColor={getStatusColor}
         rejectionReasons={rejectionReasons}
         rejectionReasonOptions={rejectionReasonOptions}
-        onApprove={handleApprove}
+onApprove={handleApprove}
         onOpenRejectionModal={handleOpenRejectionModal}
+        onResendApproval={handleResendApproval}
+        onResendApprovalArchive={handleResendApprovalArchive}
         onViewDocument={handleOpenDocument}
         onReasonChange={handleRejectionReasonChange}
         onOtherChange={handleOtherReasonChange}

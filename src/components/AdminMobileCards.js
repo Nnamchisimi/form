@@ -162,15 +162,6 @@ const AdminMobileCards = ({
                       {language === 'en' ? 'Resend Approval' : 'Onayı Yeniden Gönder'}
                     </button>
                   )}
-                  <button
-                    type="button"
-                    className="btn-delete"
-                    onClick={() => onDeleteArchived?.(record)}
-                    title={t.deleteRecord}
-                  >
-                    <Trash size={14} style={{ marginRight: 4 }} />
-                    {t.delete}
-                  </button>
                 </div>
               </div>
             )}

@@ -38,6 +38,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const [imageTransformOrigin, setImageTransformOrigin] = useState('center center');
   const ticketCaptureRef = useRef(null);
   const [ticketImageUrl, setTicketImageUrl] = useState(null);
+  const [resendingId, setResendingId] = useState(null);
   const itemsPerPage = 10;
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('desc');
@@ -302,9 +303,15 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const handleResendApproval = async (record) => {
     if (processingRef.current.has(record.id)) return;
     processingRef.current.add(record.id);
+    setResendingId(record.id);
     setProcessingIds(prev => new Set(prev).add(record.id));
     try {
-      await storage.sendApprovalEmail(record, undefined, language, null);
+      setApprovalModal(record);
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      const generatedTicketUrl = await generateTicketImage(record);
+
+      await storage.sendApprovalEmail(record, undefined, language, generatedTicketUrl);
       const archivedRecord = { ...record, invitation_status: 'Approved', chassis_number: record.chassis_number || null };
       await storage.archiveRegistration(archivedRecord, 'Approved');
       await storage.deleteRegistration(record.id);
@@ -316,15 +323,42 @@ const AdminPage = ({ language, onBack, onToast }) => {
       showToast('Error resending approval email', 'error');
       await loadRegistrations();
     } finally {
+      setApprovalModal(null);
+      setTicketImageUrl(null);
+      setResendingId(null);
       processingRef.current.delete(record.id);
       setProcessingIds(prev => { const next = new Set(prev); next.delete(record.id); return next; });
     }
   };
 
-  const handleArchiveRecord = async (record) => {
-    if (record.invitation_status === 'Approved' || record.invitation_status === 'Rejected') {
-      return;
+  // Shared helper: render the hidden Ticket component for `record`, capture it
+// with html2canvas, upload the PNG, and return a public image URL.
+// Returns null if the capture fails (caller falls back to the inline HTML
+// ticket template inside sendApprovalEmail).
+  const generateTicketImage = async (record) => {
+    if (!ticketCaptureRef.current) return null;
+    const ticketElement = ticketCaptureRef.current.querySelector('.ticket');
+    if (!ticketElement) return null;
+    try {
+      const canvas = await html2canvas(ticketElement, {
+        useCORS: true,
+        backgroundColor: null,
+        scale: 2,
+        logging: false,
+        width: 720,
+        height: 400,
+      });
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      const fileName = `${record.reference_number || 'ticket'}-${Date.now()}.png`;
+      const path = await storage.uploadTicketImage(blob, fileName);
+      return await storage.getTicketImageUrl(path);
+    } catch (imageError) {
+      console.error('Error generating ticket image:', imageError);
+      return null;
     }
+  };
+
+  const handleArchiveRecord = async (record) => {
     if (processingRef.current.has(record.id)) {
       return;
     }
@@ -466,19 +500,27 @@ const AdminPage = ({ language, onBack, onToast }) => {
   };
 
   // Re-send the approval email for an archived Approved row. The archived
-  // row stays in the archive (only the registration-page resend removes the
-  // row) - this button just re-sends the email.
+  // row stays in the archive (only the registration-page resend moves the
+  // row) - this button just re-sends the email. Generates the same ticket
+  // image as a normal approval (not the inline HTML fallback).
   const handleResendApprovalArchive = async (record) => {
     if (processingRef.current.has(record.id)) return;
     processingRef.current.add(record.id);
+    setResendingId(record.id);
     setProcessingIds(prev => new Set(prev).add(record.id));
     try {
-      await storage.sendApprovalEmail(record, undefined, language, null);
+      setApprovalModal(record);
+      await new Promise(resolve => setTimeout(resolve, 150));
+      const generatedTicketUrl = await generateTicketImage(record);
+      await storage.sendApprovalEmail(record, undefined, language, generatedTicketUrl);
       showToast(t.resendApprovalEmailSuccess || 'Approval email resent', 'success');
     } catch (error) {
       console.error('Error resending approval email for archived record:', error);
       showToast('Error resending approval email', 'error');
     } finally {
+      setApprovalModal(null);
+      setTicketImageUrl(null);
+      setResendingId(null);
       processingRef.current.delete(record.id);
       setProcessingIds(prev => { const next = new Set(prev); next.delete(record.id); return next; });
     }
@@ -634,7 +676,7 @@ onApprove={handleApprove}
       />
 
       <AdminModals
-        approvalModal={null}
+        approvalModal={resendingId ? approvalModal : null}
         rejectionModal={rejectionModal}
         documentViewer={documentViewer}
         reminderModal={reminderModal}

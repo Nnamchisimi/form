@@ -435,11 +435,18 @@ button {
 }
 
 .btn-primary:disabled,
-.btn-secondary:disabled {
-  opacity: 0.5;
+.btn-secondary:disabled,
+.btn-approve:disabled,
+.btn-reject:disabled,
+.btn-send:disabled,
+.btn-delete:disabled,
+.btn-ghost:disabled,
+button:disabled {
+  opacity: 0.45;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+  pointer-events: none;
 }
 
 

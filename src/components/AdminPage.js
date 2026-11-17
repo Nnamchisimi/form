@@ -39,6 +39,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const ticketCaptureRef = useRef(null);
   const [ticketImageUrl, setTicketImageUrl] = useState(null);
   const [resendingId, setResendingId] = useState(null);
+  const [globalProcessing, setGlobalProcessing] = useState(false);
   const itemsPerPage = 10;
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('desc');
@@ -239,34 +240,15 @@ const AdminPage = ({ language, onBack, onToast }) => {
     if (processingRef.current.has(record.id)) {
       return;
     }
+    if (globalProcessing) return; // Block if another operation in progress
     processingRef.current.add(record.id);
+    setGlobalProcessing(true);
     setProcessingIds(prev => new Set(prev).add(record.id));
     try {
       setApprovalModal(record);
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise(resolve => setTimeout(resolve, 200));
 
-      let generatedTicketUrl = null;
-      if (ticketCaptureRef.current) {
-        const ticketElement = ticketCaptureRef.current.querySelector('.ticket');
-        if (ticketElement) {
-          try {
-            const canvas = await html2canvas(ticketElement, {
-              useCORS: true,
-              backgroundColor: null,
-              scale: 2,
-              logging: false,
-              width: 720,
-              height: 400,
-            });
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-            const fileName = `${record.reference_number || 'ticket'}-${Date.now()}.png`;
-            const path = await storage.uploadTicketImage(blob, fileName);
-            generatedTicketUrl = await storage.getTicketImageUrl(path);
-          } catch (imageError) {
-            console.error('Error generating ticket image:', imageError);
-          }
-        }
-      }
+      const generatedTicketUrl = await generateTicketImage(record);
 
       const updatedRecord = { ...record, invitation_status: 'Approved', chassis_number: record.chassis_number || null };
       await storage.updateRegistration(record.id, {
@@ -290,6 +272,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
       await loadRegistrations();
     } finally {
       setApprovalModal(null);
+      setGlobalProcessing(false);
       processingRef.current.delete(record.id);
       setProcessingIds(prev => { const next = new Set(prev); next.delete(record.id); return next; });
     }
@@ -301,22 +284,33 @@ const AdminPage = ({ language, onBack, onToast }) => {
   // registration list and into the archive (where it can be re-sent again if
   // needed) - the row is NOT deleted.
   const handleResendApproval = async (record) => {
+    // Race condition guard: use ref + check record still exists in active list
     if (processingRef.current.has(record.id)) return;
+    if (globalProcessing) return; // Block if another operation in progress
     processingRef.current.add(record.id);
+    setGlobalProcessing(true);
     setResendingId(record.id);
     setProcessingIds(prev => new Set(prev).add(record.id));
     try {
       setApprovalModal(record);
-      await new Promise(resolve => setTimeout(resolve, 150));
+      // Wait for modal render + ticket element
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Verify record still in active list (not already archived by another click)
+      const currentRecords = await storage.getRegistrations();
+      if (!currentRecords.find(r => r.id === record.id)) {
+        showToast('Record already processed', 'info');
+        return;
+      }
 
       const generatedTicketUrl = await generateTicketImage(record);
 
       await storage.sendApprovalEmail(record, undefined, language, generatedTicketUrl);
       const archivedRecord = { ...record, invitation_status: 'Approved', chassis_number: record.chassis_number || null };
-      await storage.archiveRegistration(archivedRecord, 'Approved');
-      await storage.deleteRegistration(record.id);
+      await storage.archiveRegistration(archivedRecord, 'Approved', true);
       setRecords(prev => prev.filter(r => r.id !== record.id));
       await loadArchivedRegistrations();
+      await loadRegistrations();
       showToast(t.resendApprovalEmailSuccess || 'Approval email resent', 'success');
     } catch (error) {
       console.error('Error resending approval email:', error);
@@ -326,19 +320,37 @@ const AdminPage = ({ language, onBack, onToast }) => {
       setApprovalModal(null);
       setTicketImageUrl(null);
       setResendingId(null);
+      setGlobalProcessing(false);
       processingRef.current.delete(record.id);
       setProcessingIds(prev => { const next = new Set(prev); next.delete(record.id); return next; });
     }
   };
 
   // Shared helper: render the hidden Ticket component for `record`, capture it
-// with html2canvas, upload the PNG, and return a public image URL.
-// Returns null if the capture fails (caller falls back to the inline HTML
-// ticket template inside sendApprovalEmail).
+  // with html2canvas, upload the PNG, and return a public image URL.
+  // Returns null if the capture fails (caller falls back to the inline HTML
+  // ticket template inside sendApprovalEmail).
   const generateTicketImage = async (record) => {
     if (!ticketCaptureRef.current) return null;
-    const ticketElement = ticketCaptureRef.current.querySelector('.ticket');
-    if (!ticketElement) return null;
+    
+    // Wait for the ticket element to be rendered - use requestAnimationFrame for reliable DOM sync
+    let ticketElement = ticketCaptureRef.current.querySelector('.ticket');
+    let attempts = 0;
+    const maxAttempts = 20; // 20 * 50ms = 1 second max wait
+    while (!ticketElement && attempts < maxAttempts) {
+      await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 50)));
+      ticketElement = ticketCaptureRef.current.querySelector('.ticket');
+      attempts++;
+    }
+    
+    if (!ticketElement) {
+      console.error('Ticket element not found after', maxAttempts, 'attempts');
+      return null;
+    }
+    
+    // Small additional delay to ensure CSS/styles are fully applied
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
     try {
       const canvas = await html2canvas(ticketElement, {
         useCORS: true,
@@ -362,13 +374,16 @@ const AdminPage = ({ language, onBack, onToast }) => {
     if (processingRef.current.has(record.id)) {
       return;
     }
+    if (globalProcessing) return; // Block if another operation in progress
     processingRef.current.add(record.id);
+    setGlobalProcessing(true);
     const selectedReasons = rejectionReasons[record.id] || [];
     const customReason = rejectionReasons[`${record.id}_other`] || '';
 
     if (selectedReasons.length === 0 && !customReason.trim()) {
       showToast(t.pleaseSelectRejectionReason, 'warning');
       processingRef.current.delete(record.id);
+      setGlobalProcessing(false);
       return;
     }
 
@@ -404,6 +419,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
       showToast('Error archiving registration', 'error');
       await loadRegistrations();
     } finally {
+      setGlobalProcessing(false);
       processingRef.current.delete(record.id);
     }
   };
@@ -721,6 +737,15 @@ onApprove={handleApprove}
           />
         )}
       </div>
+
+      {globalProcessing && (
+        <div className="global-processing-overlay">
+          <div className="global-processing-content">
+            <div className="spinner" />
+            <p>{language === 'en' ? 'Processing... Please wait' : 'İşleniyor... Lütfen bekleyin'}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

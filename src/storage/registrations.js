@@ -155,7 +155,7 @@ export const updateRegistration = async (id, updates) => {
   return data;
 };
 
-export const archiveRegistration = async (registration, reason = 'Rejected') => {
+export const archiveRegistration = async (registration, reason = 'Rejected', isResend = false) => {
   const archived = {
     original_id: registration.id,
     name: registration.name,
@@ -179,6 +179,36 @@ export const archiveRegistration = async (registration, reason = 'Rejected') => 
     language: registration.language || null
   };
 
+  // For resend approval (reapproval), check for existing archive by email and update it
+  if (registration.invitation_status === 'Approved' && isResend) {
+    const { data: existing } = await supabase
+      .from('archived_registrations')
+      .select('id')
+      .eq('email', registration.email)
+      .eq('invitation_status', 'Approved')
+      .order('id', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      // Update existing record
+      const { data, error } = await supabase
+        .from('archived_registrations')
+        .update(archived)
+        .eq('id', existing.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating archived registration:', error);
+        throw error;
+      }
+
+      return data;
+    }
+  }
+
+  // For initial approval and other statuses (Rejected, etc.), insert as before
   const { data, error } = await supabase
     .from('archived_registrations')
     .insert([archived])

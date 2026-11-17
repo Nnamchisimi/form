@@ -192,20 +192,22 @@ export const archiveRegistration = async (registration, reason = 'Rejected', isR
       .maybeSingle();
 
     if (existing) {
-      // Update existing record
+      // Update existing record; if not returned (deleted/unselectable), fall through to insert
       const { data, error } = await supabase
         .from('archived_registrations')
         .update(archived)
         .eq('id', existing.id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error updating archived registration:', error);
         throw error;
       }
 
-      return data;
+      if (data) {
+        return data;
+      }
     }
   }
 

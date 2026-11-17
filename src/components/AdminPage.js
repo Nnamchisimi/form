@@ -379,33 +379,18 @@ const AdminPage = ({ language, onBack, onToast }) => {
     }
   };
 
-  // Resend the approval email for a stranded Approved row (one that was
-  // approved but never archived/deleted, so its approval email never sent).
-  // Re-sends the email, then archives the row so it moves out of the live
-  // registration list and into the archive (where it can be re-sent again if
-  // needed) - the row is NOT deleted.
-  const handleResendApproval = async (record) => {
-    // Race condition guard: use ref + check record still exists in active list
-    if (processingRef.current.has(record.id)) return;
-    if (isProcessingAny) {
-      showToast(t.anotherApprovalInProgress, 'warning');
-      return;
+  // Complete/resend a stranded Approved row still in registrations: render ticket via
+  // html2canvas, send approval email, ensure archived (idempotent resend upsert), then
+  // delete the active row (idempotent). Preserves approved_at when present.
+  const completeStuckApprovalCore = async (record) => {
+    if (processingRef.current.has(record.id)) {
+      return { status: 'skipped' };
     }
-    setIsProcessingAny(true);
     processingRef.current.add(record.id);
-    setResendingId(record.id);
     setProcessingIds(prev => new Set(prev).add(record.id));
     try {
       setApprovalModal(record);
-      // Wait for modal render + ticket element
       await new Promise(resolve => setTimeout(resolve, 220));
-
-      // Verify record still in active list (not already archived by another click)
-      const currentRecords = await storage.getRegistrations();
-      if (!currentRecords.find(r => r.id === record.id)) {
-        showToast('Record already processed', 'info');
-        return;
-      }
 
       const generatedTicketUrl = await generateTicketImage(record);
 
@@ -417,11 +402,41 @@ const AdminPage = ({ language, onBack, onToast }) => {
         approved_at: record.approved_at || null
       };
       await storage.archiveRegistration(archivedRecord, 'Approved', true);
+      try {
+        await storage.deleteRegistration(record.id);
+      } catch (delErr) {
+        const msg = String(delErr?.message || delErr || '');
+        // Tolerate already-deleted/missing active row to keep retries idempotent
+        if (!/not deleted|not found|does not exist|no rows/i.test(msg)) {
+          throw delErr;
+        }
+      }
       setRecords(prev => prev.filter(r => r.id !== record.id));
       setSelectedIds(prev => { const next = new Set(prev); next.delete(record.id); return next; });
-      showToast(t.resendApprovalEmailSuccess || 'Approval email resent', 'success');
-      // Clear progress immediately after resend completes
+      return { status: 'ok' };
+    } finally {
+      setApprovalModal(null);
+      processingRef.current.delete(record.id);
+      setProcessingIds(prev => { const next = new Set(prev); next.delete(record.id); return next; });
+    }
+  };
+
+  // Resend/complete a stranded Approved row still in the active list (recovery).
+  const handleResendApproval = async (record) => {
+    if (processingRef.current.has(record.id)) return;
+    if (isProcessingAny) {
+      showToast(t.anotherApprovalInProgress, 'warning');
+      return;
+    }
+    setIsProcessingAny(true);
+    setResendingId(record.id);
+    try {
+      const result = await completeStuckApprovalCore(record);
+      // Clear progress immediately after completion
       setIsProcessingAny(false);
+      if (result?.status === 'ok') {
+        showToast(t.resendApprovalEmailSuccess || 'Approval email resent', 'success');
+      }
       await loadArchivedRegistrations();
       await loadRegistrations();
     } catch (error) {
@@ -433,8 +448,51 @@ const AdminPage = ({ language, onBack, onToast }) => {
       setTicketImageUrl(null);
       setResendingId(null);
       setIsProcessingAny(false);
-      processingRef.current.delete(record.id);
-      setProcessingIds(prev => { const next = new Set(prev); next.delete(record.id); return next; });
+    }
+  };
+
+  // Bulk complete/retry stuck approvals on the current page (rows still in
+  // registrations with status Approved). Sequential per-record, canvas ticket,
+  // idempotent archive+delete, with progress and per-item errors.
+  const handleBulkCompleteStuckOnPage = async (pageRecords) => {
+    if (isProcessingAny) {
+      showToast(t.anotherApprovalInProgress, 'warning');
+      return;
+    }
+    const stuck = pageRecords.filter(r => r.invitation_status === 'Approved');
+    if (stuck.length === 0) {
+      showToast(language === 'en' ? 'No stuck approved records on this page.' : 'Bu sayfada tamamlanmamış onaylı kayıt yok.', 'info');
+      return;
+    }
+    setIsProcessingAny(true);
+    setBulkProgress({ done: 0, total: stuck.length, failed: 0 });
+    let done = 0;
+    let failed = 0;
+    try {
+      for (const record of stuck) {
+        try {
+          const result = await completeStuckApprovalCore(record);
+          if (result?.status === 'ok') done += 1; else failed += 1;
+        } catch (e) {
+          console.error('Bulk stuck-approval error for record', record.id, e);
+          failed += 1;
+        }
+        setBulkProgress({ done: done + failed, total: stuck.length, failed });
+      }
+      setBulkProgress(null);
+      setIsProcessingAny(false);
+      showToast(
+        language === 'en'
+          ? `Stuck approvals completed: ${done} processed, ${failed} failed.`
+          : `Tamamlanmamış onaylar işlendi: ${done} başarılı, ${failed} başarısız.`,
+        failed ? 'warning' : 'success'
+      );
+      await loadArchivedRegistrations();
+      await loadRegistrations();
+    } finally {
+      setBulkProgress(null);
+      setApprovalModal(null);
+      setIsProcessingAny(false);
     }
   };
 
@@ -802,6 +860,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
         onToggleSelect={toggleSelect}
         onToggleSelectAll={toggleSelectAllOnPage}
         onBulkApproveSelected={() => handleBulkApproveSelected(paginatedData)}
+        onBulkCompleteStuck={() => handleBulkCompleteStuckOnPage(paginatedData)}
         bulkProgress={bulkProgress}
         currentPage={safeCurrentPage}
         totalPages={totalPages}

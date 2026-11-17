@@ -53,6 +53,7 @@ const AdminDashboard = ({
   onToggleSelect,
   onToggleSelectAll,
   onBulkApproveSelected,
+  onBulkCompleteStuck,
   bulkProgress,
   currentPage,
   totalPages,
@@ -174,6 +175,18 @@ const AdminDashboard = ({
                   >
                     {language === 'en' ? 'Approve selected' : 'Seçilenleri onayla'}
                   </button>
+                  {dataToShow.some(r => r.invitation_status === 'Approved') && (
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={onBulkCompleteStuck}
+                      disabled={isProcessingAny || !!bulkProgress}
+                      style={{ flex: '0 0 auto', width: 'auto' }}
+                      title={language === 'en' ? 'Complete stuck approved records on this page (re-send ticket/email, archive, remove)' : 'Bu sayfadaki tamamlanmamış onaylı kayıtları tamamla (bilet/e-posta gönder, arşivle, kaldır)'}
+                    >
+                      {language === 'en' ? 'Complete stuck approvals' : 'Tamamlanmamış onayları tamamla'}
+                    </button>
+                  )}
                   {bulkProgress && (
                     <span style={{ fontSize: 13, color: '#374151' }}>
                       {language === 'en'

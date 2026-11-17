@@ -262,6 +262,9 @@ export const deleteRegistration = async (id) => {
       console.error('Record still exists after delete - possible foreign key constraint or permission issue');
       throw new Error('Record was not deleted from database');
     }
+
+    // Already deleted - treat as idempotent success (safe for retries)
+    return [];
   }
 
   return data;

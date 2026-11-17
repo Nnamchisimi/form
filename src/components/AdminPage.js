@@ -40,6 +40,8 @@ const AdminPage = ({ language, onBack, onToast }) => {
   const [ticketImageUrl, setTicketImageUrl] = useState(null);
   const [resendingId, setResendingId] = useState(null);
   const [isProcessingAny, setIsProcessingAny] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set());
   const itemsPerPage = 10;
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('desc');
@@ -52,6 +54,10 @@ const AdminPage = ({ language, onBack, onToast }) => {
   useEffect(() => {
     setCurrentPage(1);
   }, [showArchive, records.length, archivedRecords.length, searchQuery, sortOrder]);
+
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [showArchive, currentPage, searchQuery, sortOrder]);
 
   useEffect(() => {
     if (!session) return;
@@ -233,27 +239,28 @@ const AdminPage = ({ language, onBack, onToast }) => {
     setDocumentViewer(null);
   };
 
-  const handleApprove = async (record) => {
+  // Core approval: renders ticket for `record`, captures via html2canvas, updates/archives/deletes,
+  // and sends approval email. Caller controls global processing state, toasts, and reloads.
+  const approveRecordCore = async (record) => {
     if (record.invitation_status === 'Approved' || record.invitation_status === 'Rejected') {
-      return;
+      return false;
     }
     if (processingRef.current.has(record.id)) {
-      return;
+      return false;
     }
-    if (isProcessingAny) {
-      showToast(t.anotherApprovalInProgress, 'warning');
-      return;
-    }
-    setIsProcessingAny(true);
     processingRef.current.add(record.id);
     setProcessingIds(prev => new Set(prev).add(record.id));
     try {
       setApprovalModal(record);
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 220));
 
       const generatedTicketUrl = await generateTicketImage(record);
 
-      const updatedRecord = { ...record, invitation_status: 'Approved', chassis_number: record.chassis_number || null };
+      const updatedRecord = {
+        ...record,
+        invitation_status: 'Approved',
+        chassis_number: record.chassis_number || null
+      };
       await storage.updateRegistration(record.id, {
         invitation_status: 'Approved',
         chassis_number: record.chassis_number || null
@@ -265,8 +272,36 @@ const AdminPage = ({ language, onBack, onToast }) => {
       } catch (emailError) {
         console.error('Approval email error:', emailError);
       }
-      showToast(t.registrationApprovedAndArchived, 'success');
       setRecords(prev => prev.filter(r => r.id !== record.id));
+      setSelectedIds(prev => { const next = new Set(prev); next.delete(record.id); return next; });
+      return true;
+    } finally {
+      setApprovalModal(null);
+      processingRef.current.delete(record.id);
+      setProcessingIds(prev => { const next = new Set(prev); next.delete(record.id); return next; });
+    }
+  };
+
+  const handleApprove = async (record) => {
+    if (record.invitation_status === 'Approved' || record.invitation_status === 'Rejected') {
+      return false;
+    }
+    if (processingRef.current.has(record.id)) {
+      return false;
+    }
+    if (isProcessingAny) {
+      showToast(t.anotherApprovalInProgress, 'warning');
+      return false;
+    }
+    setIsProcessingAny(true);
+    let succeeded = false;
+    try {
+      succeeded = await approveRecordCore(record);
+      // Clear global progress indicator immediately after approval completes
+      setIsProcessingAny(false);
+      if (succeeded) {
+        showToast(t.registrationApprovedAndArchived, 'success');
+      }
       await loadArchivedRegistrations();
       await loadRegistrations();
     } catch (error) {
@@ -276,8 +311,68 @@ const AdminPage = ({ language, onBack, onToast }) => {
     } finally {
       setApprovalModal(null);
       setIsProcessingAny(false);
-      processingRef.current.delete(record.id);
-      setProcessingIds(prev => { const next = new Set(prev); next.delete(record.id); return next; });
+    }
+    return succeeded;
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAllOnPage = (pageRecords, checked) => {
+    const eligible = pageRecords.filter(r => r.invitation_status !== 'Approved' && r.invitation_status !== 'Rejected');
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      eligible.forEach(r => { if (checked) next.add(r.id); else next.delete(r.id); });
+      return next;
+    });
+  };
+
+  const handleBulkApproveSelected = async (pageRecords) => {
+    if (isProcessingAny) {
+      showToast(t.anotherApprovalInProgress, 'warning');
+      return;
+    }
+    const selected = pageRecords.filter(
+      r => selectedIds.has(r.id) && r.invitation_status !== 'Approved' && r.invitation_status !== 'Rejected'
+    );
+    if (selected.length === 0) {
+      showToast(language === 'en' ? 'No eligible records selected on this page.' : 'Bu sayfada seçili uygun kayıt yok.', 'warning');
+      return;
+    }
+    setIsProcessingAny(true);
+    setBulkProgress({ done: 0, total: selected.length, failed: 0 });
+    let done = 0;
+    let failed = 0;
+    try {
+      for (const record of selected) {
+        try {
+          const ok = await approveRecordCore(record);
+          if (ok) done += 1; else failed += 1;
+        } catch (e) {
+          console.error('Bulk approve error for record', record.id, e);
+          failed += 1;
+        }
+        setBulkProgress({ done: done + failed, total: selected.length, failed });
+      }
+      setBulkProgress(null);
+      setIsProcessingAny(false);
+      showToast(
+        language === 'en'
+          ? `Bulk approval complete: ${done} approved, ${failed} failed.`
+          : `Toplu onay tamamlandı: ${done} onaylandı, ${failed} başarısız.`,
+        failed ? 'warning' : 'success'
+      );
+      await loadArchivedRegistrations();
+      await loadRegistrations();
+    } finally {
+      setBulkProgress(null);
+      setApprovalModal(null);
+      setIsProcessingAny(false);
     }
   };
 
@@ -300,7 +395,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
     try {
       setApprovalModal(record);
       // Wait for modal render + ticket element
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 220));
 
       // Verify record still in active list (not already archived by another click)
       const currentRecords = await storage.getRegistrations();
@@ -315,9 +410,12 @@ const AdminPage = ({ language, onBack, onToast }) => {
       const archivedRecord = { ...record, invitation_status: 'Approved', chassis_number: record.chassis_number || null };
       await storage.archiveRegistration(archivedRecord, 'Approved', true);
       setRecords(prev => prev.filter(r => r.id !== record.id));
+      setSelectedIds(prev => { const next = new Set(prev); next.delete(record.id); return next; });
+      showToast(t.resendApprovalEmailSuccess || 'Approval email resent', 'success');
+      // Clear progress immediately after resend completes
+      setIsProcessingAny(false);
       await loadArchivedRegistrations();
       await loadRegistrations();
-      showToast(t.resendApprovalEmailSuccess || 'Approval email resent', 'success');
     } catch (error) {
       console.error('Error resending approval email:', error);
       showToast('Error resending approval email', 'error');
@@ -338,25 +436,30 @@ const AdminPage = ({ language, onBack, onToast }) => {
   // ticket template inside sendApprovalEmail).
   const generateTicketImage = async (record) => {
     if (!ticketCaptureRef.current) return null;
-    
+
     // Wait for the ticket element to be rendered - use requestAnimationFrame for reliable DOM sync
     let ticketElement = ticketCaptureRef.current.querySelector('.ticket');
     let attempts = 0;
-    const maxAttempts = 20; // 20 * 50ms = 1 second max wait
+    const maxAttempts = 30; // ~1.5s max wait
     while (!ticketElement && attempts < maxAttempts) {
       await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 50)));
       ticketElement = ticketCaptureRef.current.querySelector('.ticket');
       attempts++;
     }
-    
+
     if (!ticketElement) {
       console.error('Ticket element not found after', maxAttempts, 'attempts');
       return null;
     }
-    
-    // Small additional delay to ensure CSS/styles are fully applied
-    await new Promise(resolve => setTimeout(resolve, 50));
-    
+
+    // Ensure fonts/images/styles are fully applied to avoid distorted captures
+    try {
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
+    } catch (e) {}
+    await new Promise(resolve => setTimeout(resolve, 120));
+
     try {
       const canvas = await html2canvas(ticketElement, {
         useCORS: true,
@@ -365,6 +468,8 @@ const AdminPage = ({ language, onBack, onToast }) => {
         logging: false,
         width: 720,
         height: 400,
+        windowWidth: 720,
+        windowHeight: 400,
       });
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
       const fileName = `${record.reference_number || 'ticket'}-${Date.now()}.png`;
@@ -647,6 +752,8 @@ const AdminPage = ({ language, onBack, onToast }) => {
     const dateB = new Date(b.submitted_at || 0).getTime();
     return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
   });
+  const isApproving = isProcessingAny || !!bulkProgress;
+  const isBulkRunning = !!bulkProgress;
   const dataToShow = sortedRecords;
   const totalPages = Math.max(1, Math.ceil(dataToShow.length / itemsPerPage));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -669,7 +776,7 @@ const AdminPage = ({ language, onBack, onToast }) => {
         getStatusColor={getStatusColor}
         rejectionReasons={rejectionReasons}
         rejectionReasonOptions={rejectionReasonOptions}
-onApprove={handleApprove}
+        onApprove={handleApprove}
         onOpenRejectionModal={handleOpenRejectionModal}
         onResendApproval={handleResendApproval}
         onResendApprovalArchive={handleResendApprovalArchive}
@@ -682,7 +789,12 @@ onApprove={handleApprove}
         isRecordIncomplete={isRecordIncomplete}
         onSendReminder={handleSendReminder}
         isProcessing={(id) => processingIds.has(id)}
-        isProcessingAny={isProcessingAny}
+        isProcessingAny={isApproving}
+        selectedIds={selectedIds}
+        onToggleSelect={toggleSelect}
+        onToggleSelectAll={toggleSelectAllOnPage}
+        onBulkApproveSelected={() => handleBulkApproveSelected(paginatedData)}
+        bulkProgress={bulkProgress}
         currentPage={safeCurrentPage}
         totalPages={totalPages}
         goToPage={goToPage}
@@ -748,15 +860,23 @@ onApprove={handleApprove}
         )}
       </div>
 
-      {isProcessingAny && (
+      {(isProcessingAny || bulkProgress) && (
         <div style={{ position: 'fixed', left: 0, right: 0, top: 0, zIndex: 2000 }}>
           <div style={{ height: 4, width: '100%', background: '#e5e7eb', overflow: 'hidden' }}>
-            <div className="approval-progress-bar" style={{ height: '100%', width: '40%', background: '#3b82f6' }} />
+            {bulkProgress ? (
+              <div style={{ height: '100%', width: `${Math.round((bulkProgress.done / Math.max(1, bulkProgress.total)) * 100)}%`, background: '#3b82f6', transition: 'width 0.2s ease' }} />
+            ) : (
+              <div className="approval-progress-bar" style={{ height: '100%', width: '40%', background: '#3b82f6' }} />
+            )}
           </div>
           <div style={{ textAlign: 'center', fontSize: 12, padding: '6px 8px', background: 'rgba(255,255,255,0.95)', color: '#374151' }}>
-            {language === 'en' ? 'Approving, please wait...' : 'Onaylanıyor, lütfen bekleyin...'}
+            {bulkProgress
+              ? (language === 'en'
+                ? `Approving ${bulkProgress.done}/${bulkProgress.total} (failed: ${bulkProgress.failed})`
+                : `Onaylanıyor ${bulkProgress.done}/${bulkProgress.total} (başarısız: ${bulkProgress.failed})`)
+              : (language === 'en' ? 'Approving, please wait...' : 'Onaylanıyor, lütfen bekleyin...')}
           </div>
-          <style>{`@keyframes approvalProgress { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } } .approval-progress-bar { animation: approvalProgress 1.2s ease-in-out infinite; }`}</style>
+          {!bulkProgress && <style>{`@keyframes approvalProgress { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } } .approval-progress-bar { animation: approvalProgress 1.2s ease-in-out infinite; }`}</style>}
         </div>
       )}
     </div>

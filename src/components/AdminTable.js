@@ -24,7 +24,9 @@ const AdminTable = ({
   onSendReminder,
   onViewDocument,
   isProcessing,
-  isProcessingAny
+  isProcessingAny,
+  selectedIds,
+  onToggleSelect
 }) => {
   const getLanguageLabel = (lang) => {
     if (lang === 'tr') return 'TR';
@@ -37,6 +39,7 @@ const AdminTable = ({
     <table className="admin-table">
       <thead>
         <tr>
+          {!showArchive && <th style={{ width: 36 }}></th>}
           <th>{t.name}</th>
           <th>{t.surname}</th>
           <th>{t.email}</th>
@@ -56,8 +59,21 @@ const AdminTable = ({
         </tr>
       </thead>
       <tbody>
-        {dataToShow.map((record, index) => (
-          <tr key={index}>
+        {dataToShow.map((record, index) => {
+          const eligible = record.invitation_status !== 'Approved' && record.invitation_status !== 'Rejected';
+          return (
+          <tr key={record.id || index}>
+            {!showArchive && (
+              <td>
+                <input
+                  type="checkbox"
+                  checked={!!selectedIds?.has(record.id)}
+                  onChange={() => onToggleSelect?.(record.id)}
+                  disabled={!eligible || isProcessingAny}
+                  aria-label={language === 'en' ? 'Select record' : 'Kaydı seç'}
+                />
+              </td>
+            )}
             <td>{record.name}</td>
             <td>{record.surname}</td>
             <td>{record.email}</td>
@@ -163,7 +179,7 @@ const AdminTable = ({
               </td>
             )}
           </tr>
-        ))}
+        );})}
       </tbody>
     </table>
   );

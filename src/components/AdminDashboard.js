@@ -49,6 +49,11 @@ const AdminDashboard = ({
   onSendReminder,
   isProcessing,
   isProcessingAny,
+  selectedIds,
+  onToggleSelect,
+  onToggleSelectAll,
+  onBulkApproveSelected,
+  bulkProgress,
   currentPage,
   totalPages,
   goToPage,
@@ -146,6 +151,37 @@ const AdminDashboard = ({
             <div className="empty-state">{t.noRecords}</div>
           ) : (
             <>
+              {!showArchive && adminView === 'dashboard' && (
+                <div className="bulk-actions-bar" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14 }}>
+                    <input
+                      type="checkbox"
+                      checked={(() => {
+                        const eligible = dataToShow.filter(r => r.invitation_status !== 'Approved' && r.invitation_status !== 'Rejected');
+                        return eligible.length > 0 && eligible.every(r => selectedIds?.has(r.id));
+                      })()}
+                      onChange={(e) => onToggleSelectAll?.(dataToShow, e.target.checked)}
+                      disabled={isProcessingAny || !!bulkProgress}
+                    />
+                    {language === 'en' ? 'Select all on this page' : 'Bu sayfadaki tümünü seç'}
+                  </label>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={onBulkApproveSelected}
+                    disabled={isProcessingAny || !!bulkProgress || !dataToShow.some(r => selectedIds?.has(r.id) && r.invitation_status !== 'Approved' && r.invitation_status !== 'Rejected')}
+                  >
+                    {language === 'en' ? 'Approve selected' : 'Seçilenleri onayla'}
+                  </button>
+                  {bulkProgress && (
+                    <span style={{ fontSize: 13, color: '#374151' }}>
+                      {language === 'en'
+                        ? `${bulkProgress.done}/${bulkProgress.total} processed${bulkProgress.failed ? `, ${bulkProgress.failed} failed` : ''}`
+                        : `${bulkProgress.done}/${bulkProgress.total} işlendi${bulkProgress.failed ? `, ${bulkProgress.failed} başarısız` : ''}`}
+                    </span>
+                  )}
+                </div>
+              )}
               <div className="table-wrapper admin-table-wrapper">
                 <AdminTable
                   dataToShow={dataToShow}
@@ -170,6 +206,8 @@ const AdminDashboard = ({
                   onSendReminder={onSendReminder}
                   isProcessing={isProcessing}
                   isProcessingAny={isProcessingAny}
+                  selectedIds={selectedIds}
+                  onToggleSelect={onToggleSelect}
                 />
               </div>
 
@@ -196,6 +234,8 @@ const AdminDashboard = ({
                 onSendReminder={onSendReminder}
                 isProcessing={isProcessing}
                 isProcessingAny={isProcessingAny}
+                selectedIds={selectedIds}
+                onToggleSelect={onToggleSelect}
               />
             </>
           )}

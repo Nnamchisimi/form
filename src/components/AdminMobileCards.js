@@ -23,7 +23,9 @@ const AdminMobileCards = ({
   onSendReminder,
   onViewDocument,
   isProcessing,
-  isProcessingAny
+  isProcessingAny,
+  selectedIds,
+  onToggleSelect
 }) => {
   const getLanguageLabel = (lang) => {
     if (lang === 'tr') return 'TR';
@@ -34,12 +36,26 @@ const AdminMobileCards = ({
 
   return (
     <div className="admin-mobile-cards">
-      {dataToShow.map((record, index) => (
-        <div key={index} className="admin-mobile-card">
+      {dataToShow.map((record, index) => {
+        const eligible = record.invitation_status !== 'Approved' && record.invitation_status !== 'Rejected';
+        return (
+        <div key={record.id || index} className="admin-mobile-card">
           <div className="admin-mobile-card-header">
-            <div>
-              <div className="admin-mobile-card-title">{record.name} {record.surname}</div>
-              <div className="admin-mobile-card-subtitle">{record.email}</div>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+              {!showArchive && (
+                <input
+                  type="checkbox"
+                  checked={!!selectedIds?.has(record.id)}
+                  onChange={() => onToggleSelect?.(record.id)}
+                  disabled={!eligible || isProcessingAny}
+                  style={{ marginTop: 4 }}
+                  aria-label={language === 'en' ? 'Select record' : 'Kaydı seç'}
+                />
+              )}
+              <div>
+                <div className="admin-mobile-card-title">{record.name} {record.surname}</div>
+                <div className="admin-mobile-card-subtitle">{record.email}</div>
+              </div>
             </div>
             <span className="status-badge" style={{ backgroundColor: getStatusColor(record.invitation_status || 'Pending') }}>
               {record.invitation_status || 'Pending'}
@@ -171,7 +187,7 @@ const AdminMobileCards = ({
             )}
           </div>
         </div>
-      ))}
+      );})}
     </div>
   );
 };

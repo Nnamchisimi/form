@@ -97,38 +97,32 @@ const AdminMobileCards = ({
             {!showArchive && (
               <div className="admin-mobile-actions">
                 <div className="admin-mobile-actions-row">
-                  {!isRecordIncomplete?.(record) && (
-                    <button
-                      type="button"
-                      className="btn-approve"
-                      onClick={() => onApprove(record)}
-                      disabled={record.invitation_status === 'Approved' || record.invitation_status === 'Rejected' || isProcessing?.(record.id)}
-                      title={t.approveRegistration}
-                    >
-                      {isProcessing?.(record.id) ? (language === 'en' ? 'Approving...' : 'Onaylanıyor...') : t.approveRegistration}
-                    </button>
-                  )}
-                  {!isRecordIncomplete?.(record) && (
-                    <button
-                      type="button"
-                      className="btn-reject"
-                      onClick={() => onOpenRejectionModal?.(record)}
-                      disabled={record.invitation_status === 'Approved' || record.invitation_status === 'Rejected' || isProcessing?.(record.id)}
-                      title={t.rejectRegistration}
-                    >
-                      {t.rejectRegistration}
-                    </button>
-                  )}
-                  {isRecordIncomplete?.(record) && (
-                    <button
-                      type="button"
-                      className="btn-send"
-                      onClick={() => onSendReminder?.(record)}
-                      title={t.sendReminder}
-                    >
-                      {t.sendReminder}
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className="btn-approve"
+                    onClick={() => onApprove(record)}
+                    disabled={record.invitation_status === 'Approved' || record.invitation_status === 'Rejected' || isProcessing?.(record.id)}
+                    title={t.approveRegistration}
+                  >
+                    {isProcessing?.(record.id) ? (language === 'en' ? 'Approving...' : 'Onaylanıyor...') : t.approveRegistration}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-reject"
+                    onClick={() => onOpenRejectionModal?.(record)}
+                    disabled={record.invitation_status === 'Approved' || record.invitation_status === 'Rejected' || isProcessing?.(record.id)}
+                    title={t.rejectRegistration}
+                  >
+                    {t.rejectRegistration}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-send"
+                    onClick={() => onSendReminder?.(record)}
+                    title={t.sendReminder}
+                  >
+                    {t.sendReminder}
+                  </button>
                   <button
                     type="button"
                     className="btn-delete"

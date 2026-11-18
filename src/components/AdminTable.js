@@ -143,15 +143,17 @@ const AdminTable = ({
                       {language === 'en' ? 'Resend Approval' : 'Onayı Yeniden Gönder'}
                     </button>
                   )}
-                  <button
-                    type="button"
-                    className="btn-send"
-                    onClick={() => onSendReminder?.(record)}
-                    disabled={isProcessing?.(record.id) || isProcessingAny}
-                    title={t.sendReminder}
-                  >
-                    {t.sendReminder}
-                  </button>
+                  {isRecordIncomplete?.(record) && (
+                    <button
+                      type="button"
+                      className="btn-send"
+                      onClick={() => onSendReminder?.(record)}
+                      disabled={isProcessing?.(record.id) || isProcessingAny}
+                      title={t.sendReminder}
+                    >
+                      {t.sendReminder}
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="btn-delete"
